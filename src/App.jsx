@@ -151,12 +151,67 @@ function App() {
     setEditSlot({ thu: '', tiet: '', so_tiet: 1 });
   };
 
+  // Hàm xử lý tải file JSON
+  const handleJsonUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target.result);
+        if (json.data && Array.isArray(json.data)) {
+          // Lọc và chuẩn hóa dữ liệu mới
+          const validData = json.data.filter(item =>
+            item.mhp && item.ten && item.thu && item.tiet && Number.isInteger(Number(item.thu)) && Number.isInteger(Number(item.tiet))
+          ).map(item => ({
+            mhp: String(item.mhp),
+            ten: String(item.ten),
+            thu: Number(item.thu),
+            tiet: Number(item.tiet),
+            so_tiet: Number(item.so_tiet) || 1,
+            nhom: item.nhom ? String(item.nhom) : '',
+            giang_vien: item.giang_vien ? String(item.giang_vien) : '',
+            phong: item.phong ? String(item.phong) : ''
+          }));
+          if (validData.length === 0) {
+            alert('File JSON không có dữ liệu hợp lệ!');
+            return;
+          }
+          setTkb(prevTkb => {
+            // Loại bỏ các môn học trùng mã học phần, tiết, ngày
+            const newTkb = validData.filter(item => !prevTkb.some(old => old.mhp === item.mhp && old.thu === item.thu && old.tiet === item.tiet));
+            return [...prevTkb, ...newTkb];
+          });
+          setSubjects(prevSubjects => {
+            const mhpSet = new Set(prevSubjects.map(s => s.mhp));
+            const newSubjects = [];
+            validData.forEach(item => {
+              if (item.mhp && item.ten && !mhpSet.has(item.mhp)) {
+                newSubjects.push({ mhp: item.mhp, ten: item.ten });
+                mhpSet.add(item.mhp);
+              }
+            });
+            return [...prevSubjects, ...newSubjects];
+          });
+          alert('Đã tải và bổ sung dữ liệu từ JSON!');
+        } else {
+          alert('File JSON không đúng định dạng!');
+        }
+      } catch (err) {
+        alert('Lỗi khi đọc file JSON!');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div style={{ fontFamily: 'Segoe UI, Arial, sans-serif', background: '#f4f6f8', minHeight: '100vh' }}>
-      <h2 style={{ textAlign: 'center', margin: '18px 0', fontWeight: 600, color: '#222', fontSize: 28 }}>Thời khóa biểu</h2>
-      <div style={{ display: 'flex' }}>
+      <div style={{ background: '#f0f1f3', width: '100%', padding: '18px 0', marginBottom: 0 }}>
+        <h2 style={{ textAlign: 'center', margin: 0, fontWeight: 600, color: '#222', fontSize: 28 }}>Thời khóa biểu</h2>
+      </div>
+      <div style={{ display: 'flex', minHeight: 'calc(100vh - 60px)' }}>
         {/* Sidebar công cụ quản lý môn học */}
-        <div style={{ width: 240, background: '#f0f1f3', borderRight: '1px solid #e0e0e0', padding: 12 }}>
+        <div style={{ width: 240, background: '#f0f1f3', borderRight: '1px solid #e0e0e0', padding: 12, minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
           <h4 style={{ marginBottom: 10, fontWeight: 600, fontSize: 16, color: '#333' }}>Quản lý môn học</h4>
           <ul style={{ listStyle: 'none', padding: 0, marginBottom: 12 }}>
             {subjects.map(subject => (
@@ -207,27 +262,31 @@ function App() {
               Tải ảnh
             </button>
           </div>
+          <div style={{ marginBottom: 12 }}>
+            <label htmlFor="json-upload" style={{ display: 'block', marginBottom: 6, fontSize: 14, color: '#333', fontWeight: 500 }}>Tải JSON</label>
+            <input id="json-upload" type="file" accept="application/json" style={{ width: '100%' }} onChange={handleJsonUpload} />
+          </div>
           {/* Form thêm/sửa môn học */}
           {editSubject && (
             <div style={{ background: '#fff', borderRadius: 6, padding: 10, marginBottom: 10, border: '1px solid #e0e0e0' }}>
               <div style={{ marginBottom: 8 }}>
                 Mã học phần<br />
-                <input value={editSubject.mhp} onChange={e => setEditSubject({ ...editSubject, mhp: e.target.value })} placeholder="0001" style={{ width: '100%', padding: 5, borderRadius: 3, border: '1px solid #ccc', marginBottom: 5, fontSize: 14 }} disabled={!!subjects.find(s => s.mhp === editSubject.mhp)} />
+                <input value={editSubject.mhp} onChange={e => setEditSubject({ ...editSubject, mhp: e.target.value })} placeholder="0001" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} disabled={!!subjects.find(s => s.mhp === editSubject.mhp)} />
                 Thời gian<br />
-                <div style={{ display: 'flex', gap: 6, marginBottom: 5 }}>
-                  <select value={editSlot?.thu ?? ''} onChange={e => setEditSlot({ ...editSlot, thu: e.target.value })} style={{ width: '33%', padding: 5, borderRadius: 3, border: '1px solid #ccc', fontSize: 14 }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <select value={editSlot?.thu ?? ''} onChange={e => setEditSlot({ ...editSlot, thu: e.target.value })} style={{ width: '33%', padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 15, boxSizing: 'border-box' }}>
                     <option value="">Thứ</option>
                     {[2,3,4,5,6,7,8].map(thu => (
                       <option key={thu} value={thu}>Thứ {thu === 8 ? 'CN' : thu}</option>
                     ))}
                   </select>
-                  <select value={editSlot?.tiet ?? ''} onChange={e => setEditSlot({ ...editSlot, tiet: e.target.value })} style={{ width: '33%', padding: 5, borderRadius: 3, border: '1px solid #ccc', fontSize: 14 }}>
+                  <select value={editSlot?.tiet ?? ''} onChange={e => setEditSlot({ ...editSlot, tiet: e.target.value })} style={{ width: '33%', padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 15, boxSizing: 'border-box' }}>
                     <option value="">Tiết bắt đầu</option>
                     {[...Array(10)].map((_, i) => (
                       <option key={i+1} value={i+1}>Tiết {i+1}</option>
                     ))}
                   </select>
-                  <select value={editSlot?.so_tiet ?? 1} onChange={e => setEditSlot({ ...editSlot, so_tiet: e.target.value })} style={{ width: '33%', padding: 5, borderRadius: 3, border: '1px solid #ccc', fontSize: 14 }}>
+                  <select value={editSlot?.so_tiet ?? 1} onChange={e => setEditSlot({ ...editSlot, so_tiet: e.target.value })} style={{ width: '33%', padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 15, boxSizing: 'border-box' }}>
                     <option value="">Số tiết</option>
                     {[...Array(10)].map((_, i) => (
                       <option key={i+1} value={i+1}>{i+1}</option>
@@ -235,13 +294,13 @@ function App() {
                   </select>
                 </div>
                 Tên môn<br />
-                <input value={editSubject.ten} onChange={e => setEditSubject({ ...editSubject, ten: e.target.value })} placeholder="Subject 1" style={{ width: '100%', padding: 5, borderRadius: 3, border: '1px solid #ccc', marginBottom: 5, fontSize: 14 }} />
+                <input value={editSubject.ten} onChange={e => setEditSubject({ ...editSubject, ten: e.target.value })} placeholder="Subject 1" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
                 Nhóm môn<br />
-                <input value={editSubject.nhom} onChange={e => setEditSubject({ ...editSubject, nhom: e.target.value })} placeholder="01" style={{ width: '100%', padding: 5, borderRadius: 3, border: '1px solid #ccc', marginBottom: 5, fontSize: 14 }} />
+                <input value={editSubject.nhom} onChange={e => setEditSubject({ ...editSubject, nhom: e.target.value })} placeholder="01" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
                 Giảng viên<br />
-                <input value={editSubject.giang_vien} onChange={e => setEditSubject({ ...editSubject, giang_vien: e.target.value })} placeholder="Nguyễn Văn A" style={{ width: '100%', padding: 5, borderRadius: 3, border: '1px solid #ccc', marginBottom: 5, fontSize: 14 }} />
+                <input value={editSubject.giang_vien} onChange={e => setEditSubject({ ...editSubject, giang_vien: e.target.value })} placeholder="Nguyễn Văn A" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
                 Phòng<br />
-                <input value={editSubject.phong} onChange={e => setEditSubject({ ...editSubject, phong: e.target.value })} placeholder="C.A00" style={{ width: '100%', padding: 5, borderRadius: 3, border: '1px solid #ccc', marginBottom: 5, fontSize: 14 }} />
+                <input value={editSubject.phong} onChange={e => setEditSubject({ ...editSubject, phong: e.target.value })} placeholder="C.A00" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={handleSaveSubject} style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 3, padding: '5px 14px', cursor: 'pointer', fontSize: 14 }}>Lưu</button>
