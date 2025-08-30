@@ -11,6 +11,16 @@
     "tiet": 3,
     "giang_vien": "N.T.Tin",
     "phong": "C.E403"
+    },
+        {
+    "ten": "Lập trình C#",
+    "mhp": "841423",
+    "nhom": "01",
+    "thu": 2,
+    "so_tiet": 1,
+    "tiet": 2,
+    "giang_vien": "N.T.Tin",
+    "phong": "C.B003"
     }
   ]
 }
