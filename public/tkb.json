@@ -3,24 +3,14 @@
   "created": "Mon Aug 26 2024 22:10:21 GMT+0700 (Giờ Đông Dương)",
   "data": [
     {
-      "ten": "Lập trình Python",
-      "mhp": "841422",
-      "nhom": "01",
-      "id_to_hoc": "123456789",
-      "thu": "Thứ 2",
-      "tiet": "3",
-      "giang_vien": "N.T.Tin",
-      "phong": "C.E403"
-    },
-    {
-      "ten": "Cơ sở dữ liệu",
-      "mhp": "841109",
-      "nhom": "12",
-      "id_to_hoc": "987654321",
-      "thu": "Thứ 5",
-      "tiet": "6",
-      "giang_vien": "N.D.Hàm",
-      "phong": "C.A102"
+    "ten": "Lập trình Python",
+    "mhp": "841422",
+    "nhom": "01",
+    "thu": 2,
+    "so_tiet": 2,
+    "tiet": 3,
+    "giang_vien": "N.T.Tin",
+    "phong": "C.E403"
     }
   ]
 }

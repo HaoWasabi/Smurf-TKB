@@ -28,7 +28,9 @@ function getSubjectColor(key) {
 
 function App() {
   const [tkb, setTkb] = useState([]);
-  const [showPopup, setShowPopup] = useState(false);
+  // Bỏ chức năng fullscreen popup
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewImg, setPreviewImg] = useState(null);
   const gridRef = useRef();
 
   useEffect(() => {
@@ -37,14 +39,8 @@ function App() {
       .then((data) => setTkb(data.data));
   }, []);
 
-  // Gán ngẫu nhiên tiết và ngày cho mỗi môn học (demo)
-  const tkbWithSlot = tkb.map((item, idx) => ({
-    ...item,
-    day: days[randomInt(0, days.length - 1)],
-    period: periods[randomInt(1, periods.length - 1)]
-  }));
-
-  // Tạo ma trận thời khóa biểu
+  // Tạo ma trận thời khóa biểu từ dữ liệu tkb
+  // Mỗi item cần có: thu (ngày, số từ 2-8), tiet (số tiết bắt đầu), so_tiet (số tiết liên tiếp, mặc định 1)
   const grid = {};
   days.forEach(day => {
     grid[day] = {};
@@ -52,28 +48,42 @@ function App() {
       grid[day][period] = null;
     });
   });
-  tkbWithSlot.forEach(item => {
-    grid[item.day][item.period] = item;
+  tkb.forEach(item => {
+    // Chỉ render nếu có trường thu và tiet
+    if (item.thu && item.tiet) {
+      const day = days[item.thu - 2]; // thu: 2->8 (Thứ 2->CN)
+      const period = item.tiet;
+      const so_tiet = item.so_tiet || 1;
+      grid[day][period] = { ...item, so_tiet };
+      // Đánh dấu các tiết tiếp theo là đã bị chiếm bởi rowspan
+      for (let i = 1; i < so_tiet; i++) {
+        if (grid[day][period + i] !== undefined) grid[day][period + i] = 'skip';
+      }
+    }
   });
 
-  // Hàm tải ảnh
-  const handleDownloadImage = async () => {
-    if (!gridRef.current) return;
-    const canvas = await html2canvas(gridRef.current, { backgroundColor: null, useCORS: true });
+  // Hàm xem trước ảnh
+  const handlePreviewImage = async () => {
+    // Đảm bảo ref trỏ đúng bảng chính
+    const table = document.querySelector('#tkb-table');
+    if (!table) return;
+    const canvas = await html2canvas(table, { backgroundColor: null, useCORS: true });
+    setPreviewImg(canvas.toDataURL('image/png'));
+    setShowPreview(true);
+  };
+
+  // Hàm tải ảnh từ preview
+  const handleDownloadImage = () => {
+    if (!previewImg) return;
     const link = document.createElement('a');
     link.download = 'tkb.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = previewImg;
     link.click();
   };
 
   return (
     <div style={{ fontFamily: 'Arial', background: '#f7f7f7', minHeight: '100vh' }}>
       <h2 style={{ textAlign: 'center', margin: '24px 0' }}>Thời khóa biểu</h2>
-      <div style={{ textAlign: 'center', marginBottom: 16 }}>
-        <button onClick={() => setShowPopup(true)} style={{ padding: '8px 20px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, fontSize: 16, cursor: 'pointer', boxShadow: '0 2px 8px #eee' }}>
-          Xem thời khóa biểu
-        </button>
-      </div>
       <div style={{ display: 'flex' }}>
         {/* Sidebar môn học */}
         <div style={{ width: 260, background: '#fff', borderRight: '1px solid #eee', padding: 16 }}>
@@ -85,10 +95,16 @@ function App() {
               </li>
             ))}
           </ul>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            {/* màu success */}
+            <button onClick={handlePreviewImage} style={{ padding: '10px 28px', background: '#28a745', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18, cursor: 'pointer', fontWeight: 600, boxShadow: '0 2px 8px #eee' }}>
+              Tải ảnh
+            </button> 
+          </div>
         </div>
         {/* Grid thời khóa biểu */}
         <div style={{ flex: 1, overflowX: 'auto', padding: 24, background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px #e0e0e0', border: '1px solid #e0e0e0' }}>
-          <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', background: '#fff', borderRadius: 16, overflow: 'hidden', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: 15 }}>
+          <table id="tkb-table" ref={gridRef} style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', background: '#fff', borderRadius: 16, overflow: 'hidden', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: 15 }}>
             <thead>
               <tr>
                 <th style={{ border: '1px solid #d0d0d0', padding: '12px 8px', background: '#f5f5f5', minWidth: 60, fontWeight: 600 }}>Tiết</th>
@@ -103,18 +119,21 @@ function App() {
                   <td style={{ border: '1px solid #e0e0e0', padding: '12px 8px', background: '#fafafa', textAlign: 'center', fontWeight: 500 }}>{period}</td>
                   {days.map(day => {
                     const cell = grid[day][period];
-                    return (
-                      <td key={day} style={{ border: '1px solid #e0e0e0', padding: 0, height: 70, verticalAlign: 'top', background: '#fff' }}>
-                        {cell ? (
-                          <div style={{ background: getSubjectColor(cell.mhp), margin: 6, borderRadius: 12, padding: '10px 12px', color: '#222', fontSize: 15, fontWeight: 500, boxShadow: '0 2px 8px #ccc', border: '2px solid #fff', transition: 'box-shadow 0.2s', lineHeight: 1.5 }}>
-                            <div style={{ fontWeight: 700, marginBottom: 4 }}>{cell.ten}</div>
-                            <div style={{ fontSize: 14 }}>Mã HP: <b>{cell.mhp}</b></div>
-                            <div style={{ fontSize: 14 }}>Nhóm: <b>{cell.nhom}</b></div>
-                            <div style={{ fontSize: 13, color: '#444' }}>ID tổ học: {cell.id_to_hoc}</div>
+                    if (cell === 'skip') return null;
+                    if (cell) {
+                      return (
+                        <td key={day} rowSpan={cell.so_tiet} style={{ border: '1px solid #e0e0e0', padding: 0, height: 70 * cell.so_tiet, verticalAlign: 'top', background: '#fff' }}>
+                          <div style={{ background: getSubjectColor(cell.mhp || ''), margin: 6, borderRadius: 12, padding: '10px 12px', color: '#222', fontSize: 15, fontWeight: 500, boxShadow: '0 2px 8px #ccc', border: '2px solid #fff', transition: 'box-shadow 0.2s', lineHeight: 1.5 }}>
+                            <div style={{ fontWeight: 700, marginBottom: 4 }}>{cell.ten || ''}</div>
+                            {cell.mhp && <div style={{ fontSize: 14 }}>Mã HP: <b>{cell.mhp}</b></div>}
+                            {cell.nhom && <div style={{ fontSize: 14 }}>Nhóm: <b>{cell.nhom}</b></div>}
+                            {cell.giang_vien && <div style={{ fontSize: 14 }}>GV: <b>{cell.giang_vien}</b></div>}
+                            {cell.phong && <div style={{ fontSize: 14 }}>Phòng: <b>{cell.phong}</b></div>}
                           </div>
-                        ) : null}
-                      </td>
-                    );
+                        </td>
+                      );
+                    }
+                    return <td key={day} style={{ border: '1px solid #e0e0e0', padding: 0, height: 70, background: '#fff' }}/>;
                   })}
                 </tr>
               ))}
@@ -122,51 +141,20 @@ function App() {
           </table>
         </div>
       </div>
-
-      {/* Popup full màn hình */}
-      {showPopup && (
-        <div style={{ position: 'fixed', zIndex: 9999, top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'relative', width: '95vw', height: '95vh', background: '#fff', borderRadius: 18, boxShadow: '0 8px 32px #bbb', padding: 32, overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <button onClick={() => setShowPopup(false)} style={{ position: 'absolute', top: 24, right: 32, padding: '6px 18px', background: '#e53935', color: '#fff', border: 'none', borderRadius: 6, fontSize: 16, cursor: 'pointer', fontWeight: 600 }}>Đóng</button>
-            <div style={{ width: '100%', overflow: 'auto', flex: 1 }}>
-              <div ref={gridRef} style={{ minWidth: 900, background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px #e0e0e0', border: '1px solid #e0e0e0', padding: 24 }}>
-                <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', background: '#fff', borderRadius: 16, overflow: 'hidden', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: 15 }}>
-                  <thead>
-                    <tr>
-                      <th style={{ border: '1px solid #d0d0d0', padding: '12px 8px', background: '#f5f5f5', minWidth: 60, fontWeight: 600 }}>Tiết</th>
-                      {days.map(day => (
-                        <th key={day} style={{ border: '1px solid #d0d0d0', padding: '12px 8px', background: '#f5f5f5', minWidth: 120, fontWeight: 600 }}>{day}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {periods.map(period => (
-                      <tr key={period}>
-                        <td style={{ border: '1px solid #e0e0e0', padding: '12px 8px', background: '#fafafa', textAlign: 'center', fontWeight: 500 }}>{period}</td>
-                        {days.map(day => {
-                          const cell = grid[day][period];
-                          return (
-                            <td key={day} style={{ border: '1px solid #e0e0e0', padding: 0, height: 70, verticalAlign: 'top', background: '#fff' }}>
-                              {cell ? (
-                                <div style={{ background: getSubjectColor(cell.mhp), margin: 6, borderRadius: 12, padding: '10px 12px', color: '#222', fontSize: 15, fontWeight: 500, boxShadow: '0 2px 8px #ccc', border: '2px solid #fff', transition: 'box-shadow 0.2s', lineHeight: 1.5 }}>
-                                  <div style={{ fontWeight: 700, marginBottom: 4 }}>{cell.ten}</div>
-                                  <div style={{ fontSize: 14 }}>Mã HP: <b>{cell.mhp}</b></div>
-                                  <div style={{ fontSize: 14 }}>Nhóm: <b>{cell.nhom}</b></div>
-                                  <div style={{ fontSize: 13, color: '#444' }}>ID tổ học: {cell.id_to_hoc}</div>
-                                </div>
-                              ) : null}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+      {/* Popup xem trước ảnh */}
+      {showPreview && (
+        <div style={{ position: 'fixed', zIndex: 10000, top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 8px 32px #bbb', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h3 style={{ marginBottom: 18 }}>Xem trước ảnh thời khóa biểu</h3>
+            {previewImg && <img src={previewImg} alt="tkb preview" style={{ maxWidth: '80vw', maxHeight: '60vh', borderRadius: 12, boxShadow: '0 2px 12px #ccc', marginBottom: 24 }} />}
+            <div style={{ display: 'flex', gap: 16 }}>
+              <button onClick={handleDownloadImage} style={{ padding: '10px 28px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18, cursor: 'pointer', fontWeight: 600, boxShadow: '0 2px 8px #eee' }}>
+                Tiếp tục
+              </button>
+              <button onClick={() => setShowPreview(false)} style={{ padding: '10px 28px', background: '#e53935', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18, cursor: 'pointer', fontWeight: 600, boxShadow: '0 2px 8px #eee' }}>
+                Hủy
+              </button>
             </div>
-            <button onClick={handleDownloadImage} style={{ marginTop: 24, padding: '10px 28px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18, cursor: 'pointer', fontWeight: 600, boxShadow: '0 2px 8px #eee' }}>
-              Tải ảnh thời khóa biểu
-            </button>
           </div>
         </div>
       )}
