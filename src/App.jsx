@@ -1,34 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
+import TimetableView from './views/TimetableView';
+import SidebarView from './views/SidebarView';
+import { TimetableController } from './controllers/timetableController';
 
-const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
-const periods = Array.from({ length: 10 }, (_, i) => i + 1); // 10 tiết
-
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-// Bảng màu cho các môn học
-const subjectColors = [
-  '#A5D6A7', // xanh lá
-  '#90CAF9', // xanh dương
-  '#FFF59D', // vàng
-  '#F8BBD0', // hồng
-  '#FFCC80', // cam
-  '#CE93D8', // tím
-  '#EF9A9A'  // đỏ nhạt
-];
-
-function getSubjectColor(key) {
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) hash = key.charCodeAt(i) + ((hash << 5) - hash);
-  return subjectColors[Math.abs(hash) % subjectColors.length];
-}
+const controller = new TimetableController();
 
 function App() {
   const [tkb, setTkb] = useState([]);
-  const [subjects, setSubjects] = useState([]); // Danh sách môn học
-  const [editSubject, setEditSubject] = useState(null); // Môn học đang sửa
+  const [subjects, setSubjects] = useState([]);
+  const [editSubject, setEditSubject] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewImg, setPreviewImg] = useState(null);
   const [editSlot, setEditSlot] = useState({ thu: '', tiet: '', so_tiet: 1 });
@@ -38,70 +19,25 @@ function App() {
     fetch('tkb.json')
       .then((res) => res.json())
       .then((data) => {
-        setTkb(data.data);
-        // Lấy danh sách môn học duy nhất từ tkb
-        const uniqueSubjects = [];
-        const mhpSet = new Set();
-        data.data.forEach(item => {
-          if (item.mhp && !mhpSet.has(item.mhp)) {
-            uniqueSubjects.push({ mhp: item.mhp, ten: item.ten });
-            mhpSet.add(item.mhp);
-          }
-        });
-        setSubjects(uniqueSubjects);
+        controller.loadData(data.data);
+        setTkb(controller.getTimetable());
+        setSubjects(controller.getSubjects());
       });
   }, []);
 
-  // Tạo ma trận thời khóa biểu từ dữ liệu tkb
-  // Mỗi item cần có: thu (ngày, số từ 2-8), tiet (số tiết bắt đầu), so_tiet (số tiết liên tiếp, mặc định 1)
-  const grid = {};
-  days.forEach(day => {
-    grid[day] = {};
-    periods.forEach(period => {
-      grid[day][period] = null;
-    });
-  });
-  tkb.forEach(item => {
-    // Chỉ render nếu có trường thu và tiet
-    if (item.thu && item.tiet) {
-      const day = days[item.thu - 2]; // thu: 2->8 (Thứ 2->CN)
-      const period = item.tiet;
-      const so_tiet = item.so_tiet || 1;
-      grid[day][period] = { ...item, so_tiet };
-      // Đánh dấu các tiết tiếp theo là đã bị chiếm bởi rowspan
-      for (let i = 1; i < so_tiet; i++) {
-        if (grid[day][period + i] !== undefined) grid[day][period + i] = 'skip';
-      }
-    }
-  });
-
-  // Hàm xem trước ảnh
-  const handlePreviewImage = async () => {
-    // Đảm bảo ref trỏ đúng bảng chính
-    const table = document.querySelector('#tkb-table');
-    if (!table) return;
-    const canvas = await html2canvas(table, { backgroundColor: null, useCORS: true });
-    setPreviewImg(canvas.toDataURL('image/png'));
-    setShowPreview(true);
+  // Đồng bộ dữ liệu khi controller thay đổi
+  const syncData = () => {
+    setTkb([...controller.getTimetable()]);
+    setSubjects([...controller.getSubjects()]);
   };
 
-  // Hàm tải ảnh từ preview
-  const handleDownloadImage = () => {
-    if (!previewImg) return;
-    const link = document.createElement('a');
-    link.download = 'tkb.png';
-    link.href = previewImg;
-    link.click();
-  };
-
-  // Thêm, sửa, xóa môn học
+  // Xử lý các thao tác CRUD
   const handleAddSubject = () => {
     setEditSubject({ mhp: '', ten: '' });
     setEditSlot({ thu: '', tiet: '', so_tiet: 1 });
   };
   const handleEditSubject = (subject) => {
     setEditSubject({ ...subject });
-    // Tìm tiết đầu tiên của môn học để hiển thị lên form
     const slot = tkb.find(item => item.mhp === subject.mhp);
     setEditSlot({
       thu: slot?.thu || '',
@@ -110,48 +46,34 @@ function App() {
     });
   };
   const handleDeleteSubject = (mhp) => {
-    // Xóa môn học khỏi danh sách và tkb
-    setSubjects(subjects.filter(s => s.mhp !== mhp));
-    setTkb(tkb.filter(item => item.mhp !== mhp));
+    controller.deleteSubject(mhp);
+    syncData();
   };
   const handleSaveSubject = () => {
     if (!editSubject.mhp || !editSubject.ten) return;
-    // Nếu là thêm mới
     if (!subjects.find(s => s.mhp === editSubject.mhp)) {
-      setSubjects(prev => [...prev, { ...editSubject }]);
-      // Thêm môn học mới vào tkb với tiết nhập từ form
-      setTkb(prev => [...prev, {
-        mhp: editSubject.mhp,
-        ten: editSubject.ten,
+      controller.addSubject(editSubject, {
         thu: Number(editSlot.thu),
         tiet: Number(editSlot.tiet),
         so_tiet: Number(editSlot.so_tiet)
-      }]);
+      });
     } else {
-      setSubjects(subjects.map(s => s.mhp === editSubject.mhp ? { ...editSubject } : s));
-      // Nếu có nhập tiết mới khi sửa thì cập nhật tiết đầu tiên
-      setTkb(tkb.map(item => {
-        if (item.mhp === editSubject.mhp) {
-          return {
-            ...item,
-            ten: editSubject.ten,
-            thu: Number(editSlot.thu),
-            tiet: Number(editSlot.tiet),
-            so_tiet: Number(editSlot.so_tiet)
-          };
-        }
-        return item;
-      }));
+      controller.editSubject(editSubject, {
+        thu: Number(editSlot.thu),
+        tiet: Number(editSlot.tiet),
+        so_tiet: Number(editSlot.so_tiet)
+      });
     }
     setEditSubject(null);
     setEditSlot({ thu: '', tiet: '', so_tiet: 1 });
+    syncData();
   };
   const handleCancelEdit = () => {
     setEditSubject(null);
     setEditSlot({ thu: '', tiet: '', so_tiet: 1 });
   };
 
-  // Hàm xử lý tải file JSON
+  // Xử lý upload JSON
   const handleJsonUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -159,49 +81,30 @@ function App() {
     reader.onload = (event) => {
       try {
         const json = JSON.parse(event.target.result);
-        if (json.data && Array.isArray(json.data)) {
-          // Lọc và chuẩn hóa dữ liệu mới
-          const validData = json.data.filter(item =>
-            item.mhp && item.ten && item.thu && item.tiet && Number.isInteger(Number(item.thu)) && Number.isInteger(Number(item.tiet))
-          ).map(item => ({
-            mhp: String(item.mhp),
-            ten: String(item.ten),
-            thu: Number(item.thu),
-            tiet: Number(item.tiet),
-            so_tiet: Number(item.so_tiet) || 1,
-            nhom: item.nhom ? String(item.nhom) : '',
-            giang_vien: item.giang_vien ? String(item.giang_vien) : '',
-            phong: item.phong ? String(item.phong) : ''
-          }));
-          if (validData.length === 0) {
-            alert('File JSON không có dữ liệu hợp lệ!');
-            return;
-          }
-          setTkb(prevTkb => {
-            // Loại bỏ các môn học trùng mã học phần, tiết, ngày
-            const newTkb = validData.filter(item => !prevTkb.some(old => old.mhp === item.mhp && old.thu === item.thu && old.tiet === item.tiet));
-            return [...prevTkb, ...newTkb];
-          });
-          setSubjects(prevSubjects => {
-            const mhpSet = new Set(prevSubjects.map(s => s.mhp));
-            const newSubjects = [];
-            validData.forEach(item => {
-              if (item.mhp && item.ten && !mhpSet.has(item.mhp)) {
-                newSubjects.push({ mhp: item.mhp, ten: item.ten });
-                mhpSet.add(item.mhp);
-              }
-            });
-            return [...prevSubjects, ...newSubjects];
-          });
-          alert('Đã tải và bổ sung dữ liệu từ JSON!');
-        } else {
-          alert('File JSON không đúng định dạng!');
-        }
+        controller.mergeJson(json);
+        syncData();
+        alert('Đã tải và bổ sung dữ liệu từ JSON!');
       } catch (err) {
         alert('Lỗi khi đọc file JSON!');
       }
     };
     reader.readAsText(file);
+  };
+
+  // Xem trước/tải ảnh
+  const handlePreviewImage = async () => {
+    const table = document.querySelector('#tkb-table');
+    if (!table) return;
+    const canvas = await html2canvas(table, { backgroundColor: null, useCORS: true });
+    setPreviewImg(canvas.toDataURL('image/png'));
+    setShowPreview(true);
+  };
+  const handleDownloadImage = () => {
+    if (!previewImg) return;
+    const link = document.createElement('a');
+    link.download = 'tkb.png';
+    link.href = previewImg;
+    link.click();
   };
 
   return (
@@ -210,160 +113,24 @@ function App() {
         <h2 style={{ textAlign: 'center', margin: 0, fontWeight: 600, color: '#222', fontSize: 28 }}>Thời khóa biểu</h2>
       </div>
       <div style={{ display: 'flex', minHeight: 'calc(100vh - 60px)' }}>
-        {/* Sidebar công cụ quản lý môn học */}
-        <div style={{ width: 240, background: '#f0f1f3', borderRight: '1px solid #e0e0e0', padding: 12, minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
-          <h4 style={{ marginBottom: 10, fontWeight: 600, fontSize: 16, color: '#333' }}>Quản lý môn học</h4>
-          <ul style={{ listStyle: 'none', padding: 0, marginBottom: 12 }}>
-            {subjects.map(subject => (
-              <li key={subject.mhp} style={{ marginBottom: 6, padding: 7, background: '#fff', borderRadius: 4, color: '#222', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 15, border: '1px solid #e0e0e0' }}>
-                <span style={{ fontWeight: 500 }}>{subject.ten}</span>
-                <span>
-                  <button onClick={() => handleEditSubject(subject)} style={{ marginRight: 4, background: '#e0e0e0', border: 'none', borderRadius: 3, padding: '2px 8px', cursor: 'pointer', fontSize: 13 }}>Sửa</button>
-                  <button onClick={() => handleDeleteSubject(subject.mhp)} style={{ background: '#e53935', border: 'none', borderRadius: 3, padding: '2px 8px', color: '#fff', cursor: 'pointer', fontSize: 13 }}>Xóa</button>
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 12 }}>
-            <button
-              onClick={handleAddSubject}
-              style={{
-                width: 100,
-                height: 32,
-                background: '#1976d2',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 15,
-                fontWeight: 600,
-                cursor: 'pointer',
-                textAlign: 'center',
-                lineHeight: '1.2',
-              }}
-            >
-              Thêm môn
-            </button>
-            <button
-              onClick={handlePreviewImage}
-              style={{
-                width: 100,
-                height: 32,
-                background: '#607d8b',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 15,
-                fontWeight: 600,
-                cursor: 'pointer',
-                textAlign: 'center',
-                lineHeight: '1.2',
-              }}
-            >
-              Tải ảnh
-            </button>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label htmlFor="json-upload" style={{ display: 'block', marginBottom: 6, fontSize: 14, color: '#333', fontWeight: 500 }}>Tải JSON</label>
-            <input id="json-upload" type="file" accept="application/json" style={{ width: '100%' }} onChange={handleJsonUpload} />
-          </div>
-          {/* Form thêm/sửa môn học */}
-          {editSubject && (
-            <div style={{ background: '#fff', borderRadius: 6, padding: 10, marginBottom: 10, border: '1px solid #e0e0e0' }}>
-              <div style={{ marginBottom: 8 }}>
-                Mã học phần<br />
-                <input value={editSubject.mhp} onChange={e => setEditSubject({ ...editSubject, mhp: e.target.value })} placeholder="0001" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} disabled={!!subjects.find(s => s.mhp === editSubject.mhp)} />
-                Thời gian<br />
-                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                  <select value={editSlot?.thu ?? ''} onChange={e => setEditSlot({ ...editSlot, thu: e.target.value })} style={{ width: '33%', padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 15, boxSizing: 'border-box' }}>
-                    <option value="">Thứ</option>
-                    {[2,3,4,5,6,7,8].map(thu => (
-                      <option key={thu} value={thu}>Thứ {thu === 8 ? 'CN' : thu}</option>
-                    ))}
-                  </select>
-                  <select value={editSlot?.tiet ?? ''} onChange={e => setEditSlot({ ...editSlot, tiet: e.target.value })} style={{ width: '33%', padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 15, boxSizing: 'border-box' }}>
-                    <option value="">Tiết bắt đầu</option>
-                    {[...Array(10)].map((_, i) => (
-                      <option key={i+1} value={i+1}>Tiết {i+1}</option>
-                    ))}
-                  </select>
-                  <select value={editSlot?.so_tiet ?? 1} onChange={e => setEditSlot({ ...editSlot, so_tiet: e.target.value })} style={{ width: '33%', padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 15, boxSizing: 'border-box' }}>
-                    <option value="">Số tiết</option>
-                    {[...Array(10)].map((_, i) => (
-                      <option key={i+1} value={i+1}>{i+1}</option>
-                    ))}
-                  </select>
-                </div>
-                Tên môn<br />
-                <input value={editSubject.ten} onChange={e => setEditSubject({ ...editSubject, ten: e.target.value })} placeholder="Subject 1" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
-                Nhóm môn<br />
-                <input value={editSubject.nhom} onChange={e => setEditSubject({ ...editSubject, nhom: e.target.value })} placeholder="01" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
-                Giảng viên<br />
-                <input value={editSubject.giang_vien} onChange={e => setEditSubject({ ...editSubject, giang_vien: e.target.value })} placeholder="Nguyễn Văn A" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
-                Phòng<br />
-                <input value={editSubject.phong} onChange={e => setEditSubject({ ...editSubject, phong: e.target.value })} placeholder="C.A00" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={handleSaveSubject} style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 3, padding: '5px 14px', cursor: 'pointer', fontSize: 14 }}>Lưu</button>
-                <button onClick={handleCancelEdit} style={{ background: '#e53935', color: '#fff', border: 'none', borderRadius: 3, padding: '5px 14px', cursor: 'pointer', fontSize: 14 }}>Hủy</button>
-              </div>
-            </div>
-          )}
-        </div>
-        {/* Grid thời khóa biểu */}
+        <SidebarView
+          subjects={subjects}
+          onEdit={handleEditSubject}
+          onDelete={handleDeleteSubject}
+          onAdd={handleAddSubject}
+          onPreview={handlePreviewImage}
+          onJsonUpload={handleJsonUpload}
+          editSubject={editSubject}
+          editSlot={editSlot}
+          setEditSubject={setEditSubject}
+          setEditSlot={setEditSlot}
+          onSave={handleSaveSubject}
+          onCancel={handleCancelEdit}
+        />
         <div style={{ flex: 1, overflowX: 'auto', padding: 18, background: '#f4f6f8', borderRadius: 0, boxShadow: 'none', border: 'none' }}>
-          <table id="tkb-table" ref={gridRef} style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', background: '#fff', borderRadius: 0, overflow: 'hidden', fontFamily: 'inherit', fontSize: 15, border: '1px solid #e0e0e0' }}>
-            <thead>
-              <tr>
-                <th style={{ border: '1px solid #e0e0e0', padding: '10px 6px', background: '#f7f7f7', minWidth: 60, fontWeight: 600, color: '#333', fontSize: 15 }}>Tiết</th>
-                {days.map(day => (
-                  <th key={day} style={{ border: '1px solid #e0e0e0', padding: '10px 6px', background: '#f7f7f7', minWidth: 120, fontWeight: 600, color: '#333', fontSize: 15 }}>{day}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {periods.map(period => (
-                <tr key={period}>
-                  <td style={{ border: '1px solid #e0e0e0', padding: '10px 6px', background: '#fafafa', textAlign: 'center', fontWeight: 500, color: '#444' }}>{period}</td>
-                  {days.map(day => {
-                    const cell = grid[day][period];
-                    if (cell === 'skip') return null;
-                    if (cell) {
-                      return (
-                        <td key={day} rowSpan={cell.so_tiet} style={{ border: '1px solid #e0e0e0', padding: 0, height: 60 * cell.so_tiet, verticalAlign: 'top', background: '#fff' }}>
-                          <div style={{
-                            background: getSubjectColor(cell.mhp || ''),
-                            borderRadius: 4,
-                            padding: '8px 10px',
-                            color: '#222',
-                            fontSize: 15,
-                            fontWeight: 500,
-                            minHeight: `${54 * cell.so_tiet}px`,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            border: '1px solid #e0e0e0',
-                            boxShadow: 'none',
-                            margin: 4,
-                            lineHeight: 1.5,
-                          }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>{cell.ten || ''}</div>
-                            {cell.mhp && <div style={{ fontSize: 14, color: '#444' }}>Mã HP: <b>{cell.mhp}</b></div>}
-                            {cell.nhom && <div style={{ fontSize: 14, color: '#444' }}>Nhóm: <b>{cell.nhom}</b></div>}
-                            {cell.giang_vien && <div style={{ fontSize: 14, color: '#444' }}>GV: <b>{cell.giang_vien}</b></div>}
-                            {cell.phong && <div style={{ fontSize: 14, color: '#444' }}>Phòng: <b>{cell.phong}</b></div>}
-                          </div>
-                        </td>
-                      );
-                    }
-                    return <td key={day} style={{ border: '1px solid #e0e0e0', padding: 0, height: 60, background: '#fff' }}/>;
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <TimetableView tkb={tkb} />
         </div>
       </div>
-      {/* Popup xem trước ảnh */}
       {showPreview && (
         <div style={{ position: 'fixed', zIndex: 10000, top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 16px #bbb', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
