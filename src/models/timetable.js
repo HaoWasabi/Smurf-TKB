@@ -1,5 +1,8 @@
 // Model: Quản lý dữ liệu thời khóa biểu và môn học
 export class TimetableModel {
+  getRawData() {
+    return this.tkb;
+  }
   constructor() {
     this.tkb = [];
     this.subjects = [];

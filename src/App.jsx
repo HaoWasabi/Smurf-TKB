@@ -7,6 +7,33 @@ import { TimetableController } from './controllers/timetableController';
 const controller = new TimetableController();
 
 function App() {
+  // Cookie helpers
+  const setCookie = (name, value, days = 365) => {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+  };
+  const getCookie = (name) => {
+    return document.cookie.split('; ').reduce((r, v) => {
+      const parts = v.split('=');
+      return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+    }, '');
+  };
+
+  // Load data from cookie on first render
+  useEffect(() => {
+    const cookieData = getCookie('tkb_data');
+    if (cookieData) {
+      try {
+        const json = JSON.parse(cookieData);
+        controller.loadData(json);
+        setTkb(controller.getTimetable());
+        setSubjects(controller.getSubjects());
+      } catch (err) {
+        // Nếu lỗi, xóa cookie
+        setCookie('tkb_data', '', -1);
+      }
+    }
+  }, []);
   const [tkb, setTkb] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [editSubject, setEditSubject] = useState(null);
@@ -15,20 +42,22 @@ function App() {
   const [editSlot, setEditSlot] = useState({ thu: '', tiet: '', so_tiet: 1 });
   const gridRef = useRef();
 
-  useEffect(() => {
-    fetch('tkb.json')
-      .then((res) => res.json())
-      .then((data) => {
-        controller.loadData(data.data);
-        setTkb(controller.getTimetable());
-        setSubjects(controller.getSubjects());
-      });
-  }, []);
+  // useEffect(() => {
+  //   fetch('tkb.json')
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       controller.loadData(data.data);
+  //       setTkb(controller.getTimetable());
+  //       setSubjects(controller.getSubjects());
+  //     });
+  // }, []);
 
   // Đồng bộ dữ liệu khi controller thay đổi
   const syncData = () => {
-    setTkb([...controller.getTimetable()]);
-    setSubjects([...controller.getSubjects()]);
+  setTkb([...controller.getTimetable()]);
+  setSubjects([...controller.getSubjects()]);
+  // Lưu dữ liệu vào cookie
+  setCookie('tkb_data', JSON.stringify(controller.getRawData()));
   };
 
   // Xử lý các thao tác CRUD

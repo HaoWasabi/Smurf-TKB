@@ -2,6 +2,9 @@
 import { TimetableModel } from '../models/timetable';
 
 export class TimetableController {
+  getRawData() {
+    return this.model.getRawData();
+  }
   constructor() {
     this.model = new TimetableModel();
   }
