@@ -151,7 +151,7 @@ function App() {
   const handleDownloadImage = () => {
     if (!previewImg) return;
     const link = document.createElement('a');
-    link.download = 'tkb.png';
+    link.download = 'Smurf-TKB_tkb.png';
     link.href = previewImg;
     link.click();
   };
@@ -159,7 +159,7 @@ function App() {
   return (
     <div style={{ fontFamily: 'Segoe UI, Arial, sans-serif', background: '#f4f6f8', minHeight: '100vh' }}>
       <div style={{ background: '#f0f1f3', width: '100%', padding: '18px 0', marginBottom: 0 }}>
-        <h2 style={{ textAlign: 'center', margin: 0, fontWeight: 600, color: '#222', fontSize: 28 }}>Thời khóa biểu</h2>
+        <h2 style={{ textAlign: 'center', margin: 0, fontWeight: 600, color: '#1976d2', fontSize: 28 }}>Thời khóa biểu</h2>
       </div>
       <div style={{ display: 'flex', minHeight: 'calc(100vh - 60px)' }}>
         <SidebarView
@@ -205,6 +205,24 @@ function App() {
           </div>
         </div>
       )}
+      {/* Logo góc dưới bên phải màn hình */}
+      <img
+        src="Smurf-TKB_Store_logo.png"
+        alt="Smurf-TKB Store Logo"
+        style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          width: 80,
+          height: 80,
+          borderRadius: 16,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+          background: '#fff',
+          zIndex: 9999,
+          objectFit: 'contain',
+          padding: 8
+        }}
+      />
     </div>
   );
 }

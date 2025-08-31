@@ -30,7 +30,7 @@ export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, o
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'tkb.json';
+            a.download = 'Smurf-TKB_tkb.json';
             a.click();
             URL.revokeObjectURL(url);
           }}
@@ -39,7 +39,7 @@ export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, o
         <button onClick={onPreview} style={{ width: 100, height: 32, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}>Tải ảnh</button>
       </div>
       <div style={{ marginBottom: 12 }}>
-        <label htmlFor="json-upload" style={{ display: 'block', marginBottom: 6, fontSize: 14, color: '#333', fontWeight: 500 }}>Tải JSON</label>
+        <label htmlFor="json-upload" style={{ display: 'block', marginBottom: 6, fontSize: 14, color: '#333', fontWeight: 500 }}>Upload JSON</label>
         <input id="json-upload" type="file" accept="application/json" style={{ width: '100%' }} onChange={onJsonUpload} />
       </div>
       {editSubject && (
