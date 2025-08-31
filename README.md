@@ -1,15 +1,28 @@
-# Thời khóa biểu SGU
 
-Ứng dụng React hiển thị thời khóa biểu từ file tkb.json.
+# Smurf-TKB
 
-## Cách sử dụng
+Smurf-TKB là ứng dụng quản lý và hiển thị thời khóa biểu hiện đại, trực quan, dành cho học sinh và sinh viên. Dự án xây dựng bằng React, giao diện thân thiện, dễ sử dụng, hỗ trợ xuất/nhập dữ liệu linh hoạt.
 
-1. Chạy `npm install` để cài đặt các package cần thiết.
-2. Chạy `npm run dev` để khởi động ứng dụng.
-3. Truy cập địa chỉ hiển thị trên terminal để xem giao diện thời khóa biểu.
+## 🚀 Khởi động nhanh
 
-## Cấu trúc dữ liệu
-- File `tkb.json` chứa danh sách các môn học, mã học phần, tên môn, nhóm, id tổ học.
+```bash
+npm install
+npm run dev
+```
+Truy cập địa chỉ hiển thị trên terminal để sử dụng ứng dụng.
 
-## Tính năng
-- Hiển thị bảng thời khóa biểu hiện đại, dễ nhìn.
+## 📦 Tính năng nổi bật
+- Hiển thị thời khóa biểu rõ ràng, dễ nhìn.
+- Upload/tải dữ liệu thời khóa biểu (JSON, ảnh).
+- Lưu dữ liệu trên trình duyệt, không lo mất khi reload.
+- Tùy chỉnh, chỉnh sửa môn học trực tiếp.
+
+## 📁 Cấu trúc dữ liệu
+- `public/tkb.json`: Danh sách môn học, mã học phần, tên môn, nhóm, tổ học.
+
+## 📝 Bản quyền
+Dự án sử dụng giấy phép MIT. Xem chi tiết tại [LICENSE](./LICENSE).
+
+## 🙏 Tham khảo
+- [TKB_SGU_Extension](https://github.com/huukhuong/TKB_SGU_Extension)
+- [TKB-SGU-UI](https://github.com/nguyluky/TKB-SGU-UI)

@@ -4,6 +4,8 @@ import React from 'react';
 export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, onAdd, onPreview, onJsonUpload, editSubject, editSlot, setEditSubject, setEditSlot, onSave, onCancel }) {
   return (
     <div style={{ width: 240, background: '#f0f1f3', borderRight: '1px solid #e0e0e0', padding: 12, minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
+      <p>Bạn muốn góp ý hoặc phản hồi?</p> 
+      <a href="https://forms.gle/qcJUaibM26YB4ig4A">Click here</a>
       <h4 style={{ marginBottom: 10, fontWeight: 600, fontSize: 16, color: '#333' }}>Quản lý môn học</h4>
       <ul style={{ listStyle: 'none', padding: 0, marginBottom: 12 }}>
         {subjects.map(subject => (
