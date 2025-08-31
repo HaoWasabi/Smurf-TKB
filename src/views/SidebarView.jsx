@@ -1,7 +1,7 @@
 // View: Sidebar quản lý môn học
 import React from 'react';
 
-export default function SidebarView({ subjects, onEdit, onDelete, onAdd, onPreview, onJsonUpload, editSubject, editSlot, setEditSubject, setEditSlot, onSave, onCancel }) {
+export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, onAdd, onPreview, onJsonUpload, editSubject, editSlot, setEditSubject, setEditSlot, onSave, onCancel }) {
   return (
     <div style={{ width: 240, background: '#f0f1f3', borderRight: '1px solid #e0e0e0', padding: 12, minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
       <h4 style={{ marginBottom: 10, fontWeight: 600, fontSize: 16, color: '#333' }}>Quản lý môn học</h4>
@@ -17,8 +17,26 @@ export default function SidebarView({ subjects, onEdit, onDelete, onAdd, onPrevi
         ))}
       </ul>
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 12 }}>
-        <button onClick={onAdd} style={{ width: 100, height: 32, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}>Thêm môn</button>
-        <button onClick={onPreview} style={{ width: 100, height: 32, background: '#607d8b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}>Tải ảnh</button>
+        <button onClick={onAdd} style={{ width: 100, height: 32, background: '#43a047', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}>Thêm môn</button>
+        <button onClick={onDeleteAll} style={{ width: 100, height: 32, background: '#e53935', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}>Xóa hết</button>
+      </div>
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 12 }}>
+        <button
+          onClick={() => {
+            // Tạo dữ liệu json từ subjects và tkb
+            const data = window.tkb_data_export ? window.tkb_data_export() : null;
+            const jsonStr = JSON.stringify({ data: data || [] }, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tkb.json';
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          style={{ width: 100, height: 32, background: '#607d8b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}
+        >Tải json</button>
+        <button onClick={onPreview} style={{ width: 100, height: 32, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}>Tải ảnh</button>
       </div>
       <div style={{ marginBottom: 12 }}>
         <label htmlFor="json-upload" style={{ display: 'block', marginBottom: 6, fontSize: 14, color: '#333', fontWeight: 500 }}>Tải JSON</label>

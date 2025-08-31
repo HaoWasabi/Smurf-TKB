@@ -36,6 +36,10 @@ export class TimetableModel {
     this.subjects = this.subjects.filter(s => s.mhp !== mhp);
     this.tkb = this.tkb.filter(item => item.mhp !== mhp);
   }
+  deleteAllSubjects() {
+    this.subjects = [];
+    this.tkb = [];
+  }
   mergeJson(json) {
     if (json.data && Array.isArray(json.data)) {
       const validData = json.data.filter(item =>

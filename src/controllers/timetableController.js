@@ -20,6 +20,9 @@ export class TimetableController {
   deleteSubject(mhp) {
     this.model.deleteSubject(mhp);
   }
+  deleteAllSubjects() {
+    this.model.deleteAllSubjects();
+  }
   mergeJson(json) {
     this.model.mergeJson(json);
   }

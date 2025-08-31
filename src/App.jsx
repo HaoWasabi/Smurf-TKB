@@ -7,6 +7,13 @@ import { TimetableController } from './controllers/timetableController';
 const controller = new TimetableController();
 
 function App() {
+  const [showConfirmDeleteAll, setShowConfirmDeleteAll] = useState(false);
+  // Cho phép export dữ liệu tkb ra file json từ SidebarView
+  window.tkb_data_export = () => ({
+    name: 'Thời khóa biểu',
+    created: new Date().toString(),
+    data: controller.getRawData()
+  });
   // Cookie helpers
   const setCookie = (name, value, days = 365) => {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
@@ -78,6 +85,19 @@ function App() {
     controller.deleteSubject(mhp);
     syncData();
   };
+  const handleDeleteAllSubjects = () => {
+    setShowConfirmDeleteAll(true);
+  };
+
+  const confirmDeleteAllSubjects = () => {
+    controller.deleteAllSubjects();
+    syncData();
+    setShowConfirmDeleteAll(false);
+  };
+
+  const cancelDeleteAllSubjects = () => {
+    setShowConfirmDeleteAll(false);
+  };
   const handleSaveSubject = () => {
     if (!editSubject.mhp || !editSubject.ten) return;
     if (!subjects.find(s => s.mhp === editSubject.mhp)) {
@@ -146,6 +166,7 @@ function App() {
           subjects={subjects}
           onEdit={handleEditSubject}
           onDelete={handleDeleteSubject}
+          onDeleteAll={handleDeleteAllSubjects}
           onAdd={handleAddSubject}
           onPreview={handlePreviewImage}
           onJsonUpload={handleJsonUpload}
@@ -163,11 +184,23 @@ function App() {
       {showPreview && (
         <div style={{ position: 'fixed', zIndex: 10000, top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 16px #bbb', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h3 style={{ marginBottom: 14, fontWeight: 600, color: '#222', fontSize: 20 }}>Xem trước ảnh thời khóa biểu</h3>
+            <h3 style={{ marginBottom: 14, fontWeight: 600, color: '#222', fontSize: 20 }}>Xem trước ảnh tải</h3>
             {previewImg && <img src={previewImg} alt="tkb preview" style={{ maxWidth: '80vw', maxHeight: '60vh', borderRadius: 6, boxShadow: '0 2px 8px #ccc', marginBottom: 18 }} />}
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={handleDownloadImage} style={{ padding: '8px 22px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, fontSize: 16, cursor: 'pointer', fontWeight: 600 }}>Tiếp tục</button>
               <button onClick={() => setShowPreview(false)} style={{ padding: '8px 22px', background: '#e53935', color: '#fff', border: 'none', borderRadius: 6, fontSize: 16, cursor: 'pointer', fontWeight: 600 }}>Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmDeleteAll && (
+        <div style={{ position: 'fixed', zIndex: 10000, top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 16px #bbb', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h3 style={{ marginBottom: 14, fontWeight: 600, color: '#222', fontSize: 20 }}>Bạn có chắc muốn xóa hết dữ liệu?</h3>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={confirmDeleteAllSubjects} style={{ padding: '8px 22px', background: '#e53935', color: '#fff', border: 'none', borderRadius: 6, fontSize: 16, cursor: 'pointer', fontWeight: 600 }}>Đồng ý</button>
+              <button onClick={cancelDeleteAllSubjects} style={{ padding: '8px 22px', background: '#607d8b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 16, cursor: 'pointer', fontWeight: 600 }}>Hủy</button>
             </div>
           </div>
         </div>
