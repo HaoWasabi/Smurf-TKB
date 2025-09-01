@@ -1,7 +1,9 @@
 // View: Sidebar quản lý môn học
 import React from 'react';
 
-export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, onAdd, onPreview, onJsonUpload, editSubject, editSlot, setEditSubject, setEditSlot, onSave, onCancel }) {
+export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, onAdd, onPreview, onJsonUpload, onDownloadJson, editSubject, editSlot, setEditSubject, setEditSlot, onSave, onCancel }) {
+  // ...existing code...
+  // Thêm prop onDownloadJson để gọi modal xác nhận từ App.jsx
   return (
     <div style={{ width: 240, background: '#f0f1f3', borderRight: '1px solid #e0e0e0', padding: 12, minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
       <p>Bạn muốn góp ý hoặc phản hồi?</p> 
@@ -24,18 +26,7 @@ export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, o
       </div>
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 12 }}>
         <button
-          onClick={() => {
-            // Tạo dữ liệu json từ subjects và tkb
-            const data = window.tkb_data_export ? window.tkb_data_export() : null;
-            const jsonStr = JSON.stringify({ data: data || [] }, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Smurf-TKB_tkb.json';
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
+          onClick={typeof onDownloadJson === 'function' ? onDownloadJson : undefined}
           style={{ width: 100, height: 32, background: '#607d8b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}
         >Tải json</button>
         <button onClick={onPreview} style={{ width: 100, height: 32, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'center', lineHeight: '1.2' }}>Tải ảnh</button>
@@ -47,9 +38,9 @@ export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, o
       {editSubject && (
         <div style={{ background: '#fff', borderRadius: 6, padding: 10, marginBottom: 10, border: '1px solid #e0e0e0' }}>
           <div style={{ marginBottom: 8 }}>
-            Mã học phần<br />
+            Mã môn (Không được trống)<br />
             <input value={editSubject.mhp} onChange={e => setEditSubject({ ...editSubject, mhp: e.target.value })} placeholder="0001" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} disabled={!!subjects.find(s => s.mhp === editSubject.mhp)} />
-            Thời gian<br />
+            Thời gian (Không được trống)<br />
             <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
               <select value={editSlot?.thu ?? ''} onChange={e => setEditSlot({ ...editSlot, thu: e.target.value })} style={{ width: '33%', padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 15, boxSizing: 'border-box' }}>
                 <option value="">Thứ</option>
@@ -70,7 +61,7 @@ export default function SidebarView({ subjects, onEdit, onDelete, onDeleteAll, o
                 ))}
               </select>
             </div>
-            Tên môn<br />
+            Tên môn (Không được trống)<br />
             <input value={editSubject.ten} onChange={e => setEditSubject({ ...editSubject, ten: e.target.value })} placeholder="Subject 1" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />
             Nhóm môn<br />
             <input value={editSubject.nhom} onChange={e => setEditSubject({ ...editSubject, nhom: e.target.value })} placeholder="01" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8, fontSize: 15, boxSizing: 'border-box' }} />

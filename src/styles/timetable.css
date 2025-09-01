@@ -1,0 +1,103 @@
+:root {
+  --title-color: #333;
+  --empty-color: #f2f2f2;
+  --basic-col-color: #fff;
+  --primary-color: #f75c1e;
+  --course-color: #f75b1e2f;
+  --primary-2-color: #369925;
+  --course-2-color: #3894281a;
+  --primary-3-color: #0665e0;
+  --course-3-color: #639eeb2c;
+  --primary-4-color: #32abc6;
+  --course-4-color: #c8ece870;
+  --primary-5-color: #ec9f3f;
+  --course-5-color: #f7b76842;
+  --primary-6-color: #985bc7;
+  --course-6-color: #e1c2fb73;
+  --primary-7-color: #ea1e63;
+  --course-7-color: #ea1e632a;
+  --primary-8-color: #009788;
+  --course-8-color: #0097882a;
+  --primary-9-color: #795547;
+  --course-9-color: #7955472a;
+  --primary-10-color: #607d8b;
+  --course-10-color: #607d8b2a;
+  --content-width: 1200px;
+}
+.timetable-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: var(--content-width);
+  background: #fff;
+  /* box-shadow: 0 4px 24px rgba(0,0,0,0.08); */
+  /* border-radius: 12px; */
+  overflow: hidden;
+}
+.timetable-table th, .timetable-table td {
+  border: 1px solid #cfcfcf;
+  text-align: center;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  box-sizing: border-box;
+}
+.timetable-table th {
+  background: var(--empty-color);
+  color: var(--title-color);
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.timetable-table .stt {
+  background: var(--empty-color);
+  color: var(--title-color);
+  font-weight: bold;
+  width: 80px;
+}
+.timetable-table .col_basic {
+  background: var(--basic-col-color);
+  opacity: 0.6;
+}
+.timetable-table .course {
+  /* border-radius: 8px; */
+  font-size: 0.95rem;
+  font-weight: 500;
+  /* box-shadow: 0 2px 8px rgba(0,0,0,0.06); */
+  position: relative;
+  /* padding: 8px 4px; */
+  /* margin: 2px 0; */
+}
+.timetable-table .course-0 { background: var(--course-color); color: var(--primary-color); }
+.timetable-table .course-1 { background: var(--course-2-color); color: var(--primary-2-color); }
+.timetable-table .course-2 { background: var(--course-3-color); color: var(--primary-3-color); }
+.timetable-table .course-3 { background: var(--course-4-color); color: var(--primary-4-color); }
+.timetable-table .course-4 { background: var(--course-5-color); color: var(--primary-5-color); }
+.timetable-table .course-5 { background: var(--course-6-color); color: var(--primary-6-color); }
+.timetable-table .course-6 { background: var(--course-7-color); color: var(--primary-7-color); }
+.timetable-table .course-7 { background: var(--course-8-color); color: var(--primary-8-color); }
+.timetable-table .course-8 { background: var(--course-9-color); color: var(--primary-9-color); }
+.timetable-table .course-9 { background: var(--course-10-color); color: var(--primary-10-color); }
+.timetable-table .course:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  opacity: 0.95;
+  cursor: pointer;
+}
+.timetable-table .thead_td {
+  height: 32px;
+  background: var(--empty-color);
+  color: var(--title-color);
+  font-weight: bold;
+}
+.timetable-table .course .course-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.timetable-table .course .course-room {
+  font-size: 0.85em;
+  color: #666;
+}
+.timetable-table .course .course-teacher {
+  font-size: 0.85em;
+  color: #666;
+}
