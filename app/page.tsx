@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef, useCallback } from "react"
+import React, { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -50,6 +48,28 @@ interface GroupedScheduleData {
 
 export default function SchedulePage() {
   const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null)
+
+  // Khôi phục dữ liệu từ localStorage khi trang tải lại
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("smurf-tkb-data")
+      if (saved) {
+        const json = JSON.parse(saved)
+        if (validateScheduleData(json)) {
+          setScheduleData(json)
+        }
+      }
+    } catch {}
+  }, [])
+
+  // Lưu dữ liệu vào localStorage mỗi khi scheduleData thay đổi
+  useEffect(() => {
+    if (scheduleData) {
+      localStorage.setItem("smurf-tkb-data", JSON.stringify(scheduleData))
+    } else {
+      localStorage.removeItem("smurf-tkb-data")
+    }
+  }, [scheduleData])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
