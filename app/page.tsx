@@ -470,7 +470,7 @@ export default function SchedulePage() {
       ctx.fillStyle = "#1e40af"
       ctx.font = "bold 24px Arial"
       ctx.textAlign = "center"
-      ctx.fillText(scheduleData.name || "Thời Khóa Biểu", canvas.width / 2, 40)
+      ctx.fillText((scheduleData?.name ?? "Thời Khóa Biểu"), canvas.width / 2, 40)
 
       // Draw table headers
       const days = ["", "THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7"]
@@ -520,9 +520,11 @@ export default function SchedulePage() {
           ctx.strokeRect(x, y, cellWidth, cellHeight)
 
           // Find subject for this slot
-          const subject = scheduleData.data.find(
-            (s) => s.thu === dayIndex + 1 && s.tiet <= period && s.tiet + s.so_tiet - 1 >= period,
-          )
+          const subject =
+            scheduleData &&
+            scheduleData.data.find(
+              (s) => s.thu === dayIndex + 1 && s.tiet <= period && s.tiet + s.so_tiet - 1 >= period,
+            )
 
           if (subject) {
             // Fill with color
