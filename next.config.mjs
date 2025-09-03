@@ -9,6 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-}
+  output: "export", // 👈 thêm dòng này
+};
 
-export default nextConfig
+export default nextConfig;

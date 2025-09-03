@@ -6,26 +6,27 @@
 
 Ứng dụng web quản lý thời khóa biểu dành cho sinh viên, hỗ trợ nhập/xuất dữ liệu JSON và hiển thị lịch học trực quan.
 
-## ✨ Tính Năng
+## Tính Năng
 
-- 📅 **Hiển thị thời khóa biểu trực quan** - Lưới 7 ngày x 10 tiết với màu sắc phân biệt
-- 📁 **Nhập dữ liệu linh hoạt** - Hỗ trợ kéo thả file JSON, tự động phát hiện định dạng
-- 📤 **Xuất đa định dạng** - JSON (grouped/flat), CSV, PNG, và in trực tiếp
-- 🎨 **Giao diện thân thiện** - Thiết kế responsive, hỗ trợ tiếng Việt
-- ⚡ **Xử lý nhanh** - Validation dữ liệu thông minh, thống kê chi tiết
+- **Hiển thị thời khóa biểu trực quan** - Lưới 7 ngày x 10 tiết với màu sắc phân biệt
+- **Hỗ trợ đa nền tảng** - Sử dụng được trên nhiều thiết bị
+- **Nhập dữ liệu linh hoạt** - Hỗ trợ kéo thả file JSON, tự động phát hiện định dạng
+- **Xuất đa định dạng** - JSON (grouped/flat), CSV, PNG, và in trực tiếp
+- **Giao diện thân thiện** - Thiết kế responsive, hỗ trợ tiếng Việt
+- **Xử lý nhanh** - Validation dữ liệu thông minh, thống kê chi tiết
 
-## 🚀 Demo
+## Demo
 
-Truy cập: [https://smurf-tkb.onrender.com/](https://smurf-tkb.onrender.com/)
+Truy cập: [https://smurf-tkb.onrender.com](https://smurf-tkb.onrender.com)
 
-## 📋 Yêu Cầu
+## Yêu Cầu
 
 - Node.js 18+
 - npm hoặc yarn
 
-## 🛠️ Cài Đặt
+## Cài Đặt
 
-\`\`\`bash
+```bash
 # Clone repository
 git clone https://github.com/HaoWasabi/Smurf-TKB.git
 cd Smurf-TKB
@@ -35,15 +36,15 @@ npm install
 
 # Chạy development server
 npm run dev
-\`\`\`
+```
 
 Mở [http://localhost:3000](http://localhost:3000) để xem ứng dụng.
 
-## 📖 Hướng Dẫn Chi Tiết
+## Hướng Dẫn Chi Tiết
 
 Xem file [HUONG_DAN_KHOI_CHAY.md](./HUONG_DAN_KHOI_CHAY.md) để có hướng dẫn đầy đủ bằng tiếng Việt.
 
-## 🏗️ Công Nghệ
+## Công Nghệ
 
 - **Framework**: Next.js 14 với App Router
 - **Language**: TypeScript
@@ -51,10 +52,10 @@ Xem file [HUONG_DAN_KHOI_CHAY.md](./HUONG_DAN_KHOI_CHAY.md) để có hướng d
 - **UI Components**: shadcn/ui
 - **Export**: html2canvas cho xuất hình ảnh
 
-## 📊 Định Dạng Dữ Liệu
+## Định Dạng Dữ Liệu
 
 ### Input (Flat Format)
-\`\`\`json
+```json
 [
   {
     "ten": "Lập trình Web",
@@ -67,10 +68,10 @@ Xem file [HUONG_DAN_KHOI_CHAY.md](./HUONG_DAN_KHOI_CHAY.md) để có hướng d
     "phong": "TC-201"
   }
 ]
-\`\`\`
+```
 
 ### Output (Grouped Format)
-\`\`\`json
+```json
 [
   {
     "ten": "Lập trình Web",
@@ -87,9 +88,9 @@ Xem file [HUONG_DAN_KHOI_CHAY.md](./HUONG_DAN_KHOI_CHAY.md) để có hướng d
     ]
   }
 ]
-\`\`\`
+```
 
-## 🤝 Đóng Góp
+## Đóng Góp
 
 1. Fork repository
 2. Tạo feature branch (`git checkout -b feature/AmazingFeature`)
@@ -97,17 +98,21 @@ Xem file [HUONG_DAN_KHOI_CHAY.md](./HUONG_DAN_KHOI_CHAY.md) để có hướng d
 4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Mở Pull Request
 
-## 📝 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-## 👨‍💻 Tác Giả
+## Tác Giả
 
 **HaoWasabi** - [GitHub](https://github.com/HaoWasabi)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Next.js](https://nextjs.org/) - React framework
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
 - [html2canvas](https://html2canvas.hertzen.com/) - Screenshot library
+
+## Tham khảo
+- [TKB_SGU_Extension](https://github.com/huukhuong/TKB_SGU_Extension)
+- [TKB-SGU-UI](https://github.com/nguyluky/TKB-SGU-UI)

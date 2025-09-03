@@ -11,48 +11,48 @@ Smurf-TKB là ứng dụng quản lý thời khóa biểu dành cho sinh viên, 
 ## Cài Đặt Dự Án
 
 ### 1. Tải Mã Nguồn
-\`\`\`bash
+```bash
 # Clone repository từ GitHub
 git clone https://github.com/HaoWasabi/Smurf-TKB.git
 
 # Hoặc tải ZIP từ v0 và giải nén
-\`\`\`
+```
 
 ### 2. Di Chuyển Vào Thư Mục Dự Án
-\`\`\`bash
+```bash
 cd Smurf-TKB
-\`\`\`
+```
 
 ### 3. Cài Đặt Dependencies
-\`\`\`bash
+```bash
 # Sử dụng npm
 npm install
 
 # Hoặc sử dụng yarn
 yarn install
-\`\`\`
+```
 
 ## Khởi Chạy Ứng Dụng
 
 ### 1. Chế Độ Development (Phát Triển)
-\`\`\`bash
+```bash
 # Sử dụng npm
 npm run dev
 
 # Hoặc sử dụng yarn
 yarn dev
-\`\`\`
+```
 
 Ứng dụng sẽ chạy tại: `http://localhost:3000`
 
 ### 2. Chế Độ Production (Sản Xuất)
-\`\`\`bash
+```bash
 # Build ứng dụng
 npm run build
 
 # Khởi chạy
 npm start
-\`\`\`
+```
 
 ## Cách Sử Dụng
 
@@ -78,7 +78,7 @@ npm start
 ## Cấu Trúc File JSON
 
 ### Định Dạng Đầu Vào (Flat Format)
-\`\`\`json
+```json
 [
   {
     "ten": "Tên môn học",
@@ -91,10 +91,10 @@ npm start
     "phong": "Phòng học"
   }
 ]
-\`\`\`
+```
 
 ### Định Dạng Đầu Ra (Grouped Format)
-\`\`\`json
+```json
 [
   {
     "ten": "Tên môn học",
@@ -111,22 +111,22 @@ npm start
     ]
   }
 ]
-\`\`\`
+```
 
 ## Xử Lý Sự Cố
 
 ### Lỗi Cài Đặt
-\`\`\`bash
+```bash
 # Xóa node_modules và cài đặt lại
 rm -rf node_modules package-lock.json
 npm install
-\`\`\`
+```
 
 ### Lỗi Port Đã Được Sử Dụng
-\`\`\`bash
+```bash
 # Thay đổi port (ví dụ: 3001)
 npm run dev -- -p 3001
-\`\`\`
+```
 
 ### Lỗi File JSON
 - Kiểm tra định dạng JSON hợp lệ

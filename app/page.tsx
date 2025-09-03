@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef, useCallback } from "react"
+import React, { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -50,6 +48,28 @@ interface GroupedScheduleData {
 
 export default function SchedulePage() {
   const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null)
+
+  // Khôi phục dữ liệu từ localStorage khi trang tải lại
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("smurf-tkb-data")
+      if (saved) {
+        const json = JSON.parse(saved)
+        if (validateScheduleData(json)) {
+          setScheduleData(json)
+        }
+      }
+    } catch {}
+  }, [])
+
+  // Lưu dữ liệu vào localStorage mỗi khi scheduleData thay đổi
+  useEffect(() => {
+    if (scheduleData) {
+      localStorage.setItem("smurf-tkb-data", JSON.stringify(scheduleData))
+    } else {
+      localStorage.removeItem("smurf-tkb-data")
+    }
+  }, [scheduleData])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -75,11 +95,13 @@ export default function SchedulePage() {
   const [subjectToDelete, setSubjectToDelete] = useState<ScheduleItem | null>(null)
   const [showJsonPreview, setShowJsonPreview] = useState(false)
   const [showImagePreview, setShowImagePreview] = useState(false)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [previewData, setPreviewData] = useState<any>(null)
   const [exportType, setExportType] = useState<"grouped" | "flat" | "csv">("grouped")
 
   // Days of the week in Vietnamese
-  const days = ["CN", "THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7"]
+  const dayLabels = ["THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7", "CN"]
+  const days = [2, 3, 4, 5, 6, 7, 0]
   const periods = Array.from({ length: 10 }, (_, i) => i + 1)
 
   const courseColors = [
@@ -441,7 +463,100 @@ export default function SchedulePage() {
       return
     }
 
-    setShowImagePreview(true)
+    // Tạo ảnh PNG và hiển thị xem trước
+    try {
+      const scheduleTable = document.querySelector("table") as HTMLElement
+      if (!scheduleTable) {
+        throw new Error("Không tìm thấy bảng thời khóa biểu")
+      }
+
+  const canvas = document.createElement("canvas")
+  const ctx = canvas.getContext("2d")!
+  const cellWidth = 160
+  const cellHeight = 60
+  const totalCols = 8 // 1 cột tiết + 7 cột ngày
+  canvas.width = 9 * cellWidth // tăng thêm để có khoảng trống hai bên
+  canvas.height = 800
+  const startX = (canvas.width - totalCols * cellWidth) / 2 // căn giữa bảng
+      ctx.fillStyle = "#ffffff"
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = "#1e40af"
+      ctx.font = "bold 24px Arial"
+      ctx.textAlign = "center"
+      ctx.fillText((scheduleData?.name ?? "Thời Khóa Biểu"), canvas.width / 2, 40)
+  const days = ["THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7", "CN"]
+  const startY = 80
+      ctx.font = "bold 14px Arial"
+      ctx.fillStyle = "#374151"
+      ctx.strokeStyle = "#d1d5db"
+      ctx.lineWidth = 1
+      // Vẽ cột đầu tiên tiêu đề 'TIẾT'
+      ctx.strokeRect(startX, startY, cellWidth, cellHeight)
+      ctx.fillStyle = "#f3f4f6"
+      ctx.fillRect(startX + 1, startY + 1, cellWidth - 2, cellHeight - 2)
+      ctx.fillStyle = "#374151"
+      ctx.textAlign = "center"
+      ctx.fillText("TIẾT", startX + cellWidth / 2, startY + cellHeight / 2 + 5)
+
+      // Vẽ các tiêu đề ngày
+      days.forEach((day, index) => {
+        const x = startX + (index + 1) * cellWidth
+        const y = startY
+        ctx.strokeRect(x, y, cellWidth, cellHeight)
+        ctx.fillStyle = "#f3f4f6"
+        ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2)
+        ctx.fillStyle = "#374151"
+        ctx.textAlign = "center"
+        ctx.fillText(day, x + cellWidth / 2, y + cellHeight / 2 + 5)
+      })
+      for (let period = 1; period <= 10; period++) {
+        const y = startY + period * cellHeight
+        // Vẽ cột đầu tiên số tiết
+        ctx.strokeRect(startX, y, cellWidth, cellHeight)
+        ctx.fillStyle = "#f9fafb"
+        ctx.fillRect(startX + 1, y + 1, cellWidth - 2, cellHeight - 2)
+        ctx.fillStyle = "#374151"
+        ctx.textAlign = "center"
+        ctx.fillText(`TIẾT ${period}`, startX + cellWidth / 2, y + cellHeight / 2 + 5)
+
+        // Vẽ các cột ngày
+        for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+          const x = startX + (dayIndex + 1) * cellWidth
+          ctx.strokeRect(x, y, cellWidth, cellHeight)
+          // dayIndex 0-5: thứ 2-7, dayIndex 6: CN
+          const thuValue = dayIndex < 6 ? dayIndex + 2 : 0;
+          const subject =
+            scheduleData &&
+            scheduleData.data.find(
+              (s) => s.thu === thuValue && s.tiet <= period && s.tiet + s.so_tiet - 1 >= period,
+            )
+          if (subject) {
+            const colors = ["#dbeafe", "#dcfce7", "#fef3c7", "#fce7f3", "#e0e7ff", "#f0fdf4"]
+            const colorIndex = scheduleData.data.indexOf(subject) % colors.length
+            ctx.fillStyle = colors[colorIndex]
+            ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2)
+            ctx.fillStyle = "#374151"
+            ctx.font = "12px Arial"
+            ctx.textAlign = "center"
+            const lines = [
+              subject.ten.substring(0, 15) + (subject.ten.length > 15 ? "..." : ""),
+              `${subject.giang_vien || ""}`,
+              `${subject.phong || ""}`,
+            ]
+            lines.forEach((line, lineIndex) => {
+              if (line.trim()) {
+                ctx.fillText(line, x + cellWidth / 2, y + 20 + lineIndex * 15)
+              }
+            })
+          }
+        }
+      }
+      const url = canvas.toDataURL("image/png", 0.95)
+      setImagePreviewUrl(url)
+      setShowImagePreview(true)
+    } catch (error) {
+      setError(`Lỗi tạo ảnh: ${error instanceof Error ? error.message : "Lỗi không xác định"}`)
+    }
   }
 
   const confirmExportImage = async () => {
@@ -470,7 +585,7 @@ export default function SchedulePage() {
       ctx.fillStyle = "#1e40af"
       ctx.font = "bold 24px Arial"
       ctx.textAlign = "center"
-      ctx.fillText(scheduleData.name || "Thời Khóa Biểu", canvas.width / 2, 40)
+      ctx.fillText((scheduleData?.name ?? "Thời Khóa Biểu"), canvas.width / 2, 40)
 
       // Draw table headers
       const days = ["", "THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7"]
@@ -520,9 +635,11 @@ export default function SchedulePage() {
           ctx.strokeRect(x, y, cellWidth, cellHeight)
 
           // Find subject for this slot
-          const subject = scheduleData.data.find(
-            (s) => s.thu === dayIndex + 1 && s.tiet <= period && s.tiet + s.so_tiet - 1 >= period,
-          )
+          const subject =
+            scheduleData &&
+            scheduleData.data.find(
+              (s) => s.thu === dayIndex + 1 && s.tiet <= period && s.tiet + s.so_tiet - 1 >= period,
+            )
 
           if (subject) {
             // Fill with color
@@ -1077,80 +1194,8 @@ export default function SchedulePage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse bg-white">
-                <thead>
-                  <tr className="bg-gradient-to-r from-gray-100 to-gray-200">
-                    <th className="border border-gray-400 p-3 font-bold text-gray-700 sticky left-0 bg-gray-100 z-10">
-                      TIẾT
-                    </th>
-                    {days.map((day) => (
-                      <th key={day} className="border border-gray-400 p-3 font-bold text-gray-700 min-w-40">
-                        {day}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {periods.map((period) => (
-                    <tr key={period} className="hover:bg-gray-50 transition-colors">
-                      <td className="border border-gray-400 p-3 text-center font-semibold bg-gray-50 sticky left-0 z-10">
-                        {period}
-                      </td>
-                      {[0, 2, 3, 4, 5, 6, 7].map((dayIndex) => {
-                        const cellInfo = shouldRenderCell(dayIndex, period)
-
-                        if (!cellInfo.render) {
-                          return null
-                        }
-
-                        return (
-                          <td
-                            key={`${period}-${dayIndex}`}
-                            className="border border-gray-400 p-1 relative"
-                            style={{
-                              height: cellInfo.item ? `${cellInfo.rowSpan * 4}rem` : "4rem",
-                              minHeight: "4rem",
-                            }}
-                            rowSpan={cellInfo.item ? cellInfo.rowSpan : 1}
-                          >
-                            {cellInfo.item && (
-                              <div
-                                className="text-xs p-2 rounded-md h-full flex flex-col justify-center border-2 shadow-sm hover:shadow-md transition-shadow"
-                                style={{
-                                  backgroundColor: getCourseColor(cellInfo.item.mhp).bg,
-                                  color: getCourseColor(cellInfo.item.mhp).text,
-                                  borderColor: getCourseColor(cellInfo.item.mhp).border,
-                                }}
-                              >
-                                <div className="font-bold text-center mb-1 leading-tight">{cellInfo.item.ten}</div>
-                                <div className="text-center opacity-90 text-xs">
-                                  {cellInfo.item.mhp} - {cellInfo.item.nhom}
-                                </div>
-                                <div className="text-center mt-1 font-medium">{cellInfo.item.giang_vien}</div>
-                                <div className="text-center font-medium">{cellInfo.item.phong}</div>
-                                {cellInfo.item.so_tiet > 1 && (
-                                  <div className="text-center text-xs opacity-75 mt-1">
-                                    ({cellInfo.item.so_tiet} tiết)
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
         {scheduleData && scheduleData.data.length > 0 && (
-          <Card className="mt-6">
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle>Danh sách môn học ({scheduleData.data.length} môn)</CardTitle>
             </CardHeader>
@@ -1213,6 +1258,78 @@ export default function SchedulePage() {
             </CardContent>
           </Card>
         )}
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse bg-white">
+                <thead>
+                  <tr className="bg-gradient-to-r from-gray-100 to-gray-200">
+                    <th className="border border-gray-400 p-3 font-bold text-gray-700 sticky left-0 bg-gray-100 z-10">
+                      TIẾT
+                    </th>
+                    {dayLabels.map((label, idx) => (
+                      <th key={label} className="border border-gray-400 p-3 font-bold text-gray-700 min-w-40">
+                        {label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {periods.map((period) => (
+                    <tr key={period} className="hover:bg-gray-50 transition-colors">
+                      <td className="border border-gray-400 p-3 text-center font-semibold bg-gray-50 sticky left-0 z-10">
+                        {period}
+                      </td>
+                      {days.map((day) => {
+                        const cellInfo = shouldRenderCell(day, period)
+
+                        if (!cellInfo.render) {
+                          return null
+                        }
+
+                        return (
+                          <td
+                            key={`${period}-${day}`}
+                            className="border border-gray-400 p-1 relative"
+                            style={{
+                              height: cellInfo.item ? `${cellInfo.rowSpan * 4}rem` : "4rem",
+                              minHeight: "4rem",
+                            }}
+                            rowSpan={cellInfo.item ? cellInfo.rowSpan : 1}
+                          >
+                            {cellInfo.item && (
+                              <div
+                                className="text-xs p-2 rounded-md h-full flex flex-col justify-center border-2 shadow-sm hover:shadow-md transition-shadow"
+                                style={{
+                                  backgroundColor: getCourseColor(cellInfo.item.mhp).bg,
+                                  color: getCourseColor(cellInfo.item.mhp).text,
+                                  borderColor: getCourseColor(cellInfo.item.mhp).border,
+                                }}
+                              >
+                                <div className="font-bold text-center mb-1 leading-tight">{cellInfo.item.ten}</div>
+                                <div className="text-center opacity-90 text-xs">
+                                  {cellInfo.item.mhp} - {cellInfo.item.nhom}
+                                </div>
+                                <div className="text-center mt-1 font-medium">{cellInfo.item.giang_vien}</div>
+                                <div className="text-center font-medium">{cellInfo.item.phong}</div>
+                                {cellInfo.item.so_tiet > 1 && (
+                                  <div className="text-center text-xs opacity-75 mt-1">
+                                    ({cellInfo.item.so_tiet} tiết)
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
 
         <Dialog open={isEditSubjectOpen} onOpenChange={setIsEditSubjectOpen}>
           <DialogContent className="max-w-md">
@@ -1415,23 +1532,33 @@ export default function SchedulePage() {
         </Dialog>
 
         <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-xl">
             <DialogHeader>
-              <DialogTitle>Xác nhận xuất ảnh</DialogTitle>
+              <DialogTitle>Xem trước ảnh thời khóa biểu</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <p>Bạn có muốn xuất thời khóa biểu thành file ảnh PNG không?</p>
-              <div className="bg-blue-50 p-3 rounded">
-                <p className="text-sm text-blue-700">
-                  Ảnh sẽ được tạo với kích thước 1200x800px và chứa toàn bộ thông tin thời khóa biểu hiện tại.
-                </p>
-              </div>
+              {imagePreviewUrl && (
+                <div className="flex justify-center">
+                  <img src={imagePreviewUrl} alt="Preview TKB" className="rounded shadow max-w-full max-h-[500px]" />
+                </div>
+              )}
               <div className="flex gap-2 pt-4">
-                <Button onClick={confirmExportImage} className="flex-1" disabled={isExporting}>
-                  {isExporting ? "Đang xuất..." : "Xuất ảnh"}
+                <Button
+                  onClick={() => {
+                    if (imagePreviewUrl) {
+                      const a = document.createElement("a")
+                      a.href = imagePreviewUrl
+                      a.download = `tkb-preview-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.png`
+                      a.click()
+                    }
+                  }}
+                  className="flex-1"
+                  disabled={!imagePreviewUrl}
+                >
+                  Tải ảnh
                 </Button>
                 <Button variant="outline" onClick={() => setShowImagePreview(false)}>
-                  Hủy
+                  Đóng
                 </Button>
               </div>
             </div>
@@ -1467,7 +1594,17 @@ export default function SchedulePage() {
           </Card>
         )}
 
+        <div className="mt-2 text-center">
         <div className="mt-6 text-center text-sm text-gray-500">Smurf-TKB-v1.0.0</div>
+          <a
+            href="https://forms.gle/qcJUaibM26YB4ig4A"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-4 py-2 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+          >
+            Gửi góp ý hoặc phản hồi cho Smurf-TKB
+          </a>
+        </div>
       </div>
     </div>
   )

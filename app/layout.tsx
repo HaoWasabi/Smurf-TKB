@@ -5,9 +5,9 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Smurf TKB',
+  description: 'A tool to help you create and manage your schedules.',
+  generator: 'HaoWasabi',
 }
 
 export default function RootLayout({
