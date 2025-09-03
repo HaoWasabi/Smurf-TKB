@@ -1594,7 +1594,17 @@ export default function SchedulePage() {
           </Card>
         )}
 
+        <div className="mt-2 text-center">
         <div className="mt-6 text-center text-sm text-gray-500">Smurf-TKB-v1.0.0</div>
+          <a
+            href="https://forms.gle/qcJUaibM26YB4ig4A"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-4 py-2 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+          >
+            Gửi góp ý hoặc phản hồi cho Smurf-TKB
+          </a>
+        </div>
       </div>
     </div>
   )
