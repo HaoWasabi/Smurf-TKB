@@ -1233,17 +1233,17 @@ export default function SchedulePage() {
                         <td className="border border-gray-300 px-2 py-1 text-xs">
                           <div className="flex gap-1">
                             <Button
-                              size="sm"
+                              size="default"
                               variant="outline"
-                              className="h-6 px-2 text-xs bg-transparent"
+                              className="h-10 px-4 text-base bg-transparent"
                               onClick={() => handleEditSubject(item)}
                             >
                               Sửa
                             </Button>
                             <Button
-                              size="sm"
+                              size="default"
                               variant="outline"
-                              className="h-6 px-2 text-xs bg-red-500 text-white hover:bg-red-600"
+                              className="h-10 px-4 text-base bg-red-500 text-white hover:bg-red-600"
                               onClick={() => handleDeleteSubject(item)}
                             >
                               Xóa
