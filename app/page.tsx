@@ -754,8 +754,8 @@ export default function SchedulePage() {
   }
 
   const handleAddSubject = () => {
-    if (!newSubject.ten || !newSubject.mhp || !newSubject.nhom) {
-      setError("Vui lòng điền đầy đủ thông tin bắt buộc: Tên môn học, Mã học phần, Nhóm")
+    if (!newSubject.ten || !newSubject.mhp) {
+      setError("Vui lòng điền đầy đủ thông tin bắt buộc: Tên môn học, Mã học phần")
       return
     }
 
@@ -827,8 +827,8 @@ export default function SchedulePage() {
   }
 
   const handleSaveEditedSubject = () => {
-    if (!newSubject.ten || !newSubject.mhp || !newSubject.nhom) {
-      setError("Vui lòng điền đầy đủ thông tin bắt buộc: Tên môn học, Mã học phần, Nhóm")
+    if (!newSubject.ten || !newSubject.mhp) {
+      setError("Vui lòng điền đầy đủ thông tin bắt buộc: Tên môn học, Mã học phần")
       return
     }
 
@@ -1015,7 +1015,7 @@ export default function SchedulePage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="nhom">Nhóm *</Label>
+                        <Label htmlFor="nhom">Nhóm</Label>
                         <Input
                           id="nhom"
                           value={newSubject.nhom}
