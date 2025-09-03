@@ -469,22 +469,53 @@ export default function SchedulePage() {
         throw new Error("Không tìm thấy bảng thời khóa biểu")
       }
 
-  const canvas = document.createElement("canvas")
-  const ctx = canvas.getContext("2d")!
-  const cellWidth = 160
-  const cellHeight = 60
-  const totalCols = 8 // 1 cột tiết + 7 cột ngày
-  canvas.width = 9 * cellWidth // tăng thêm để có khoảng trống hai bên
-  canvas.height = 800
-  const startX = (canvas.width - totalCols * cellWidth) / 2 // căn giữa bảng
+      const canvas = document.createElement("canvas")
+      const ctx = canvas.getContext("2d")!
+      const cellWidth = 160
+      const cellHeight = 60
+      const totalCols = 8 // 1 cột tiết + 7 cột ngày
+      canvas.width = 9 * cellWidth // tăng thêm để có khoảng trống hai bên
+      // Tăng chiều cao để chứa thông báo trùng tiết
+      let baseHeight = 800
+      const conflicted = getConflictedSubjects()
+      // Tính số dòng thực tế cần cho thông báo trùng tiết (word wrap)
+      let conflictLines = 0
+      const maxLineWidth = canvas.width - 2 * ((canvas.width - totalCols * cellWidth) / 2) - 40 // padding
+      ctx.font = "14px Arial"
+      if (conflicted.length > 0) {
+        conflicted.forEach(conf => {
+          let thuText = conf.thu === 0 ? "Chủ nhật" : `Thứ ${conf.thu}`
+          let monText = conf.items.map(item => `${item.ten} (${item.mhp} - ${item.nhom})`).join(", ")
+          let fullText = `${thuText}, Tiết ${conf.tiet}: ${monText}`
+          // Chia dòng theo từ, không vượt quá maxLineWidth
+          let words = fullText.split(" ")
+          let line = ""
+          words.forEach((word, idx) => {
+            let testLine = line.length > 0 ? line + " " + word : word
+            let metrics = ctx.measureText(testLine)
+            if (metrics.width > maxLineWidth) {
+              conflictLines++
+              line = word
+            } else {
+              line = testLine
+            }
+            // Nếu là từ cuối cùng thì cũng tính là một dòng
+            if (idx === words.length - 1) conflictLines++
+          })
+        })
+      }
+  // Tăng chiều cao canvas nhiều hơn để đảm bảo không bị cắt
+  let conflictHeight = conflicted.length > 0 ? 80 + conflictLines * 36 : 0
+  canvas.height = baseHeight + conflictHeight
+      const startX = (canvas.width - totalCols * cellWidth) / 2 // căn giữa bảng
       ctx.fillStyle = "#ffffff"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.fillStyle = "#1e40af"
       ctx.font = "bold 24px Arial"
       ctx.textAlign = "center"
       ctx.fillText((scheduleData?.name ?? "Thời Khóa Biểu"), canvas.width / 2, 40)
-  const days = ["THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7", "CN"]
-  const startY = 80
+      const days = ["THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7", "CN"]
+      const startY = 80
       ctx.font = "bold 14px Arial"
       ctx.fillStyle = "#374151"
       ctx.strokeStyle = "#d1d5db"
@@ -549,6 +580,39 @@ export default function SchedulePage() {
             })
           }
         }
+      }
+      // Vẽ thông báo các môn bị trùng tiết bên dưới bảng
+      if (conflicted.length > 0) {
+        ctx.font = "bold 18px Arial"
+        ctx.fillStyle = "#dc2626"
+        ctx.textAlign = "left"
+        ctx.fillText("Các môn bị trùng tiết:", startX, baseHeight + 40)
+        ctx.font = "14px Arial"
+        ctx.fillStyle = "#b91c1c"
+        let y = baseHeight + 70
+        conflicted.forEach((conf) => {
+          let thuText = conf.thu === 0 ? "Chủ nhật" : `Thứ ${conf.thu}`
+          let monText = conf.items.map(item => `${item.ten} (${item.mhp} - ${item.nhom})`).join(", ")
+          let fullText = `${thuText}, Tiết ${conf.tiet}: ${monText}`
+          // Chia dòng theo từ, không vượt quá maxLineWidth
+          let words = fullText.split(" ")
+          let line = ""
+          words.forEach((word, idx) => {
+            let testLine = line.length > 0 ? line + " " + word : word
+            let metrics = ctx.measureText(testLine)
+            if (metrics.width > maxLineWidth) {
+              ctx.fillText(line, startX + 20, y)
+              y += 24
+              line = word
+            } else {
+              line = testLine
+            }
+            if (idx === words.length - 1 && line.length > 0) {
+              ctx.fillText(line, startX + 20, y)
+              y += 24
+            }
+          })
+        })
       }
       const url = canvas.toDataURL("image/png", 0.95)
       setImagePreviewUrl(url)
@@ -753,24 +817,12 @@ export default function SchedulePage() {
   }
 
   const handleAddSubject = () => {
+
     if (!newSubject.ten || !newSubject.mhp) {
       setError("Vui lòng điền đầy đủ thông tin bắt buộc: Tên môn học, Mã học phần")
       return
     }
-
-    if (newSubject.thu && newSubject.tiet && newSubject.so_tiet) {
-      const hasConflict = scheduleData?.data.some(
-        (item) =>
-          item.thu === newSubject.thu &&
-          ((item.tiet <= newSubject.tiet && item.tiet + item.so_tiet > newSubject.tiet) ||
-            (newSubject.tiet <= item.tiet && newSubject.tiet + newSubject.so_tiet > item.tiet)),
-      )
-
-      if (hasConflict) {
-        setError("Thời gian học bị trùng với môn học khác")
-        return
-      }
-    }
+    // Cho phép đăng ký môn bị trùng tiết, không kiểm tra xung đột nữa
 
     const newScheduleItem: ScheduleItem = {
       ten: newSubject.ten,
@@ -833,6 +885,21 @@ export default function SchedulePage() {
 
     if (!scheduleData || !editingSubject) return
 
+    // Kiểm tra trùng tiết với các môn khác (trừ chính môn đang chỉnh sửa)
+    const isConflict = scheduleData.data.some((item) => {
+      if (item === editingSubject) return false
+      return (
+        item.thu === newSubject.thu &&
+        ((item.tiet <= newSubject.tiet && item.tiet + item.so_tiet > newSubject.tiet) ||
+          (newSubject.tiet <= item.tiet && newSubject.tiet + newSubject.so_tiet > item.tiet))
+      )
+    })
+
+    if (isConflict) {
+      setError("Thời gian học bị trùng với môn học khác")
+      return
+    }
+
     const updatedData = scheduleData.data.map((item) =>
       item === editingSubject
         ? {
@@ -867,6 +934,57 @@ export default function SchedulePage() {
     })
     setError(null)
   }
+  // Hàm lấy danh sách các môn không bị trùng tiết
+  const getNonConflictedSubjects = () => {
+    if (!scheduleData) return []
+    const subjects = scheduleData.data
+    const result: ScheduleItem[] = []
+    subjects.forEach((item, idx) => {
+      // Kiểm tra xem có môn nào trước đó bị trùng với môn này không
+      const isConflictWithPrevious = result.some((prev) => {
+        return (
+          prev.thu === item.thu &&
+          ((prev.tiet <= item.tiet && prev.tiet + prev.so_tiet > item.tiet) ||
+            (item.tiet <= prev.tiet && item.tiet + item.so_tiet > prev.tiet))
+        )
+      })
+      if (!isConflictWithPrevious) {
+        result.push(item)
+      }
+      // Nếu bị trùng với môn trước đó thì không push vào result
+    })
+    return result
+  }
+
+  // Hàm lấy danh sách các môn bị trùng tiết
+  const getConflictedSubjects = () => {
+    if (!scheduleData) return []
+    const subjects = scheduleData.data
+    const conflicts: { items: ScheduleItem[]; thu: number; tiet: number }[] = []
+    // Duyệt từng tiết, từng ngày
+    for (let thu = 0; thu <= 7; thu++) {
+      for (let tiet = 1; tiet <= 10; tiet++) {
+        // Tìm các môn học chiếm tiết này
+        const overlapped = subjects.filter(
+          (item) =>
+            item.thu === thu &&
+            item.tiet <= tiet &&
+            item.tiet + item.so_tiet - 1 >= tiet
+        )
+        if (overlapped.length > 1) {
+          // Nếu có nhiều hơn 1 môn chiếm tiết này thì bị trùng
+          // Kiểm tra đã thêm chưa (tránh lặp lại)
+          const alreadyAdded = conflicts.some(
+            (c) => c.thu === thu && c.tiet === tiet
+          )
+          if (!alreadyAdded) {
+            conflicts.push({ items: overlapped, thu, tiet })
+          }
+        }
+      }
+    }
+    return conflicts
+  }
 
   const getScheduleItem = (day: number, period: number) => {
     if (!scheduleData) return null
@@ -875,8 +993,9 @@ export default function SchedulePage() {
 
   const getScheduleItems = (day: number, period: number) => {
     if (!scheduleData) return []
-
-    return scheduleData.data.filter((item) => {
+    // Chỉ lấy các môn không bị trùng tiết
+    const nonConflicted = getNonConflictedSubjects()
+    return nonConflicted.filter((item) => {
       return item.thu === day && item.tiet <= period && item.tiet + item.so_tiet - 1 >= period
     })
   }
@@ -1328,6 +1447,31 @@ export default function SchedulePage() {
                 </tbody>
               </table>
             </div>
+            {/* Hiển thị thông tin môn trùng tiết */}
+            {scheduleData && getConflictedSubjects().length > 0 && (
+              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="font-bold text-red-700 mb-2">Các môn bị trùng tiết:</div>
+                <ul className="list-disc pl-6 space-y-2">
+                  {getConflictedSubjects().map((conf, idx) => (
+                    <li key={idx} className="text-sm text-red-700">
+                      <span>
+                        <strong>
+                          {conf.thu === 0 ? "Chủ nhật" : `Thứ ${conf.thu}`}, Tiết {conf.tiet}:
+                        </strong>
+                      </span>
+                      <span className="ml-2">
+                        {conf.items.map((item, i) => (
+                          <span key={i}>
+                            {item.ten} ({item.mhp} - {item.nhom})
+                            {i < conf.items.length - 1 ? ", " : ""}
+                          </span>
+                        ))}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </CardContent>
         </Card>
 
