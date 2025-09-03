@@ -100,7 +100,8 @@ export default function SchedulePage() {
   const [exportType, setExportType] = useState<"grouped" | "flat" | "csv">("grouped")
 
   // Days of the week in Vietnamese
-  const days = ["CN", "THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7"]
+  const dayLabels = ["THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7", "CN"]
+  const days = [2, 3, 4, 5, 6, 7, 0]
   const periods = Array.from({ length: 10 }, (_, i) => i + 1)
 
   const courseColors = [
@@ -469,27 +470,37 @@ export default function SchedulePage() {
         throw new Error("Không tìm thấy bảng thời khóa biểu")
       }
 
-      const canvas = document.createElement("canvas")
-      const ctx = canvas.getContext("2d")!
-      canvas.width = 1200
-      canvas.height = 800
+  const canvas = document.createElement("canvas")
+  const ctx = canvas.getContext("2d")!
+  const cellWidth = 160
+  const cellHeight = 60
+  const totalCols = 8 // 1 cột tiết + 7 cột ngày
+  canvas.width = 9 * cellWidth // tăng thêm để có khoảng trống hai bên
+  canvas.height = 800
+  const startX = (canvas.width - totalCols * cellWidth) / 2 // căn giữa bảng
       ctx.fillStyle = "#ffffff"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.fillStyle = "#1e40af"
       ctx.font = "bold 24px Arial"
       ctx.textAlign = "center"
       ctx.fillText((scheduleData?.name ?? "Thời Khóa Biểu"), canvas.width / 2, 40)
-      const days = ["", "THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7"]
-      const cellWidth = 160
-      const cellHeight = 60
-      const startX = 40
-      const startY = 80
+  const days = ["THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7", "CN"]
+  const startY = 80
       ctx.font = "bold 14px Arial"
       ctx.fillStyle = "#374151"
       ctx.strokeStyle = "#d1d5db"
       ctx.lineWidth = 1
+      // Vẽ cột đầu tiên tiêu đề 'TIẾT'
+      ctx.strokeRect(startX, startY, cellWidth, cellHeight)
+      ctx.fillStyle = "#f3f4f6"
+      ctx.fillRect(startX + 1, startY + 1, cellWidth - 2, cellHeight - 2)
+      ctx.fillStyle = "#374151"
+      ctx.textAlign = "center"
+      ctx.fillText("TIẾT", startX + cellWidth / 2, startY + cellHeight / 2 + 5)
+
+      // Vẽ các tiêu đề ngày
       days.forEach((day, index) => {
-        const x = startX + index * cellWidth
+        const x = startX + (index + 1) * cellWidth
         const y = startY
         ctx.strokeRect(x, y, cellWidth, cellHeight)
         ctx.fillStyle = "#f3f4f6"
@@ -500,19 +511,24 @@ export default function SchedulePage() {
       })
       for (let period = 1; period <= 10; period++) {
         const y = startY + period * cellHeight
+        // Vẽ cột đầu tiên số tiết
         ctx.strokeRect(startX, y, cellWidth, cellHeight)
         ctx.fillStyle = "#f9fafb"
         ctx.fillRect(startX + 1, y + 1, cellWidth - 2, cellHeight - 2)
         ctx.fillStyle = "#374151"
         ctx.textAlign = "center"
         ctx.fillText(`TIẾT ${period}`, startX + cellWidth / 2, y + cellHeight / 2 + 5)
-        for (let dayIndex = 1; dayIndex < 7; dayIndex++) {
-          const x = startX + dayIndex * cellWidth
+
+        // Vẽ các cột ngày
+        for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+          const x = startX + (dayIndex + 1) * cellWidth
           ctx.strokeRect(x, y, cellWidth, cellHeight)
+          // dayIndex 0-5: thứ 2-7, dayIndex 6: CN
+          const thuValue = dayIndex < 6 ? dayIndex + 2 : 0;
           const subject =
             scheduleData &&
             scheduleData.data.find(
-              (s) => s.thu === dayIndex + 1 && s.tiet <= period && s.tiet + s.so_tiet - 1 >= period,
+              (s) => s.thu === thuValue && s.tiet <= period && s.tiet + s.so_tiet - 1 >= period,
             )
           if (subject) {
             const colors = ["#dbeafe", "#dcfce7", "#fef3c7", "#fce7f3", "#e0e7ff", "#f0fdf4"]
@@ -1251,9 +1267,9 @@ export default function SchedulePage() {
                     <th className="border border-gray-400 p-3 font-bold text-gray-700 sticky left-0 bg-gray-100 z-10">
                       TIẾT
                     </th>
-                    {days.map((day) => (
-                      <th key={day} className="border border-gray-400 p-3 font-bold text-gray-700 min-w-40">
-                        {day}
+                    {dayLabels.map((label, idx) => (
+                      <th key={label} className="border border-gray-400 p-3 font-bold text-gray-700 min-w-40">
+                        {label}
                       </th>
                     ))}
                   </tr>
@@ -1264,8 +1280,8 @@ export default function SchedulePage() {
                       <td className="border border-gray-400 p-3 text-center font-semibold bg-gray-50 sticky left-0 z-10">
                         {period}
                       </td>
-                      {[0, 2, 3, 4, 5, 6, 7].map((dayIndex) => {
-                        const cellInfo = shouldRenderCell(dayIndex, period)
+                      {days.map((day) => {
+                        const cellInfo = shouldRenderCell(day, period)
 
                         if (!cellInfo.render) {
                           return null
@@ -1273,7 +1289,7 @@ export default function SchedulePage() {
 
                         return (
                           <td
-                            key={`${period}-${dayIndex}`}
+                            key={`${period}-${day}`}
                             className="border border-gray-400 p-1 relative"
                             style={{
                               height: cellInfo.item ? `${cellInfo.rowSpan * 4}rem` : "4rem",
