@@ -767,7 +767,7 @@ export default function SchedulePage() {
       )
 
       if (hasConflict) {
-        setError("Thời gian học bị trung với môn học khác")
+        setError("Thời gian học bị trùng với môn học khác")
         return
       }
     }
@@ -1357,7 +1357,7 @@ export default function SchedulePage() {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-nhom">Nhóm *</Label>
+                <Label htmlFor="edit-nhom">Nhóm</Label>
                 <Input
                   id="edit-nhom"
                   value={newSubject.nhom}
