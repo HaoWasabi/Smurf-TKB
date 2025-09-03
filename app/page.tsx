@@ -322,7 +322,6 @@ export default function SchedulePage() {
   }, [])
 
   const handleClearData = () => {
-    setScheduleData(null)
     setSelectedFile(null)
     setError(null)
     if (fileInputRef.current) {
@@ -1236,6 +1235,7 @@ export default function SchedulePage() {
                               size="default"
                               variant="outline"
                               className="h-10 px-4 text-base bg-transparent"
+                              style={{ width: "80px", fontSize: "12px" }}
                               onClick={() => handleEditSubject(item)}
                             >
                               Sửa
@@ -1244,6 +1244,7 @@ export default function SchedulePage() {
                               size="default"
                               variant="outline"
                               className="h-10 px-4 text-base bg-red-500 text-white hover:bg-red-600"
+                              style={{ width: "80px", fontSize: "12px" }}
                               onClick={() => handleDeleteSubject(item)}
                             >
                               Xóa
