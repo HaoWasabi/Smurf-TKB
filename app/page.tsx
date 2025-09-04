@@ -885,21 +885,7 @@ export default function SchedulePage() {
 
     if (!scheduleData || !editingSubject) return
 
-    // Kiểm tra trùng tiết với các môn khác (trừ chính môn đang chỉnh sửa)
-    const isConflict = scheduleData.data.some((item) => {
-      if (item === editingSubject) return false
-      return (
-        item.thu === newSubject.thu &&
-        ((item.tiet <= newSubject.tiet && item.tiet + item.so_tiet > newSubject.tiet) ||
-          (newSubject.tiet <= item.tiet && newSubject.tiet + newSubject.so_tiet > item.tiet))
-      )
-    })
-
-    if (isConflict) {
-      setError("Thời gian học bị trùng với môn học khác")
-      return
-    }
-
+    // Cho phép sửa lịch môn sang tiết trùng với môn khác, không kiểm tra xung đột nữa
     const updatedData = scheduleData.data.map((item) =>
       item === editingSubject
         ? {
