@@ -1727,6 +1727,7 @@ export default function SchedulePage() {
                       a.href = imagePreviewUrl
                       a.download = `tkb-preview-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.png`
                       a.click()
+                      setShowImagePreview(false)
                     }
                   }}
                   className="flex-1"
