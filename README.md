@@ -4,11 +4,13 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 
-Ứng dụng web quản lý thời khóa biểu dành cho sinh viên, hỗ trợ nhập/xuất dữ liệu JSON và hiển thị lịch học trực quan.
+Ứng dụng web quản lý thời khóa biểu dành cho sinh viên, hỗ trợ nhập/xuất dữ liệu JSON, xử lý trùng tiết thông minh và hiển thị lịch học trực quan, xuất ảnh khối môn liền mạch.
 
 ## Tính Năng
 
-- **Hiển thị thời khóa biểu trực quan** - Lưới 7 ngày x 10 tiết với màu sắc phân biệt
+- **Hiển thị thời khóa biểu trực quan** - Lưới 7 ngày x 10 tiết với màu sắc phân biệt, khối môn liền mạch
+- **Xử lý trùng tiết thông minh** - Nếu tiết của môn đăng ký sau bị trùng với môn trước, chỉ hiện các tiết không trùng, các tiết liền nhau được gộp thành khối
+- **Xuất ảnh khối môn liền mạch** - Khi xuất PNG, các khối môn được vẽ liền mạch, không bị chia nhỏ bởi đường viền tiết
 - **Hỗ trợ đa nền tảng** - Sử dụng được trên nhiều thiết bị
 - **Nhập dữ liệu linh hoạt** - Hỗ trợ kéo thả file JSON, tự động phát hiện định dạng
 - **Xuất đa định dạng** - JSON (grouped/flat), CSV, PNG, và in trực tiếp
@@ -52,23 +54,8 @@ Xem file [HUONG_DAN_KHOI_CHAY.md](./HUONG_DAN_KHOI_CHAY.md) để có hướng d
 - **UI Components**: shadcn/ui
 - **Export**: html2canvas cho xuất hình ảnh
 
-## Định Dạng Dữ Liệu
 
-### Input (Flat Format)
-```json
-[
-  {
-    "ten": "Lập trình Web",
-    "mhp": "IT4409",
-    "nhom": "01",
-    "thu": 2,
-    "so_tiet": 3,
-    "tiet": 1,
-    "giang_vien": "Nguyễn Văn A",
-    "phong": "TC-201"
-  }
-]
-```
+## Định Dạng Dữ Liệu & Xử Lý Trùng Tiết
 
 ### Output (Grouped Format)
 ```json
@@ -77,6 +64,7 @@ Xem file [HUONG_DAN_KHOI_CHAY.md](./HUONG_DAN_KHOI_CHAY.md) để có hướng d
     "ten": "Lập trình Web",
     "mhp": "IT4409",
     "nhom": "01",
+    "so_tc": 2,
     "lich": [
       {
         "thu": 2,
@@ -89,6 +77,11 @@ Xem file [HUONG_DAN_KHOI_CHAY.md](./HUONG_DAN_KHOI_CHAY.md) để có hướng d
   }
 ]
 ```
+
+### Quy tắc xử lý trùng tiết
+- Nếu tiết của môn đăng ký sau bị trùng với tiết của môn đã đăng ký trước, chỉ hiện các tiết không bị trùng.
+- Các tiết không trùng, nếu nằm liền nhau, sẽ được gộp thành một khối khi hiển thị và khi xuất ảnh.
+- Khi xuất ảnh PNG, các khối môn được vẽ liền mạch, không bị chia nhỏ bởi đường viền tiết bên trong khối môn.
 
 ## Đóng Góp
 

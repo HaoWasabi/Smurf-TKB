@@ -60,7 +60,6 @@ npm start
 - **Kéo thả file JSON**: Kéo file JSON vào vùng upload
 - **Chọn file**: Click vào nút "Chọn File JSON" để browse file
 - **Định dạng hỗ trợ**: 
-  - Định dạng phẳng (flat): Mỗi môn học là một object riêng
   - Định dạng nhóm (grouped): Môn học có mảng lịch học
 
 ### 2. Xem Thời Khóa Biểu
@@ -70,28 +69,10 @@ npm start
 
 ### 3. Xuất Dữ Liệu
 - **JSON Nhóm**: Xuất theo định dạng có cấu trúc lồng
-- **JSON Phẳng**: Xuất theo định dạng phẳng
-- **CSV**: Xuất dạng bảng tính
 - **Hình ảnh PNG**: Chụp màn hình thời khóa biểu
 - **In**: In trực tiếp thời khóa biểu
 
 ## Cấu Trúc File JSON
-
-### Định Dạng Đầu Vào (Flat Format)
-```json
-[
-  {
-    "ten": "Tên môn học",
-    "mhp": "Mã học phần",
-    "nhom": "Nhóm",
-    "thu": 2,
-    "so_tiet": 3,
-    "tiet": 1,
-    "giang_vien": "Tên giảng viên",
-    "phong": "Phòng học"
-  }
-]
-```
 
 ### Định Dạng Đầu Ra (Grouped Format)
 ```json
@@ -100,6 +81,7 @@ npm start
     "ten": "Tên môn học",
     "mhp": "Mã học phần", 
     "nhom": "Nhóm",
+    "so_tc": 3,
     "lich": [
       {
         "thu": 2,
