@@ -507,45 +507,50 @@ export default function SchedulePage() {
         ctx.textAlign = "center"
         ctx.fillText(day, x + cellWidth / 2, y + cellHeight / 2 + 5)
       })
+      // Sử dụng các khối đã tách tiết không trùng và đã gộp tiết liền nhau
+      const nonConflicted = getNonConflictedSubjects();
       for (let period = 1; period <= 10; period++) {
-        const y = startY + period * cellHeight
+        const y = startY + period * cellHeight;
         // Vẽ cột đầu tiên số tiết
-        ctx.strokeRect(startX, y, cellWidth, cellHeight)
-        ctx.fillStyle = "#f9fafb"
-        ctx.fillRect(startX + 1, y + 1, cellWidth - 2, cellHeight - 2)
-        ctx.fillStyle = "#374151"
-        ctx.textAlign = "center"
-        ctx.fillText(`TIẾT ${period}`, startX + cellWidth / 2, y + cellHeight / 2 + 5)
+        ctx.strokeRect(startX, y, cellWidth, cellHeight);
+        ctx.fillStyle = "#f9fafb";
+        ctx.fillRect(startX + 1, y + 1, cellWidth - 2, cellHeight - 2);
+        ctx.fillStyle = "#374151";
+        ctx.textAlign = "center";
+        ctx.fillText(`TIẾT ${period}`, startX + cellWidth / 2, y + cellHeight / 2 + 5);
 
         // Vẽ các cột ngày
         for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
-          const x = startX + (dayIndex + 1) * cellWidth
-          ctx.strokeRect(x, y, cellWidth, cellHeight)
+          const x = startX + (dayIndex + 1) * cellWidth;
+          ctx.strokeRect(x, y, cellWidth, cellHeight);
           // dayIndex 0-5: thứ 2-7, dayIndex 6: CN
           const thuValue = dayIndex < 6 ? dayIndex + 2 : 0;
-          const subject =
-            scheduleData &&
-            scheduleData.data.find(
-              (s) => s.thu === thuValue && s.tiet <= period && s.tiet + s.so_tiet - 1 >= period,
-            )
+          // Tìm khối môn bắt đầu tại tiết này
+          const subject = nonConflicted.find(
+            (s) => s.thu === thuValue && s.tiet === period
+          );
           if (subject) {
-            const colors = ["#dbeafe", "#dcfce7", "#fef3c7", "#fce7f3", "#e0e7ff", "#f0fdf4"]
-            const colorIndex = scheduleData.data.indexOf(subject) % colors.length
-            ctx.fillStyle = colors[colorIndex]
-            ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2)
-            ctx.fillStyle = "#374151"
-            ctx.font = "12px Arial"
-            ctx.textAlign = "center"
+            const colors = ["#dbeafe", "#dcfce7", "#fef3c7", "#fce7f3", "#e0e7ff", "#f0fdf4"];
+            // Tìm index dựa trên vị trí trong scheduleData.data để giữ màu sắc cũ
+            const originalIdx = scheduleData.data.findIndex(
+              (item) => item.mhp === subject.mhp && item.nhom === subject.nhom && item.thu === subject.thu && item.tiet <= subject.tiet && item.tiet + item.so_tiet - 1 >= subject.tiet
+            );
+            const colorIndex = originalIdx % colors.length;
+            ctx.fillStyle = colors[colorIndex];
+            ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight * subject.so_tiet - 2);
+            ctx.fillStyle = "#374151";
+            ctx.font = "12px Arial";
+            ctx.textAlign = "center";
             const lines = [
               subject.ten.substring(0, 15) + (subject.ten.length > 15 ? "..." : ""),
               `${subject.giang_vien || ""}`,
               `${subject.phong || ""}`,
-            ]
+            ];
             lines.forEach((line, lineIndex) => {
               if (line.trim()) {
-                ctx.fillText(line, x + cellWidth / 2, y + 20 + lineIndex * 15)
+                ctx.fillText(line, x + cellWidth / 2, y + 20 + lineIndex * 15);
               }
-            })
+            });
           }
         }
       }
@@ -893,26 +898,41 @@ export default function SchedulePage() {
     })
     setError(null)
   }
-  // Hàm lấy danh sách các môn không bị trùng tiết
+  // Hàm lấy danh sách các môn đã tách khối, chỉ hiện tiết không bị trùng với các môn đã đăng ký trước
   const getNonConflictedSubjects = () => {
-    if (!scheduleData) return []
-    const subjects = scheduleData.data
-    const result: ScheduleItem[] = []
-    subjects.forEach((item, idx) => {
-      // Kiểm tra xem có môn nào trước đó bị trùng với môn này không
-      const isConflictWithPrevious = result.some((prev) => {
-        return (
-          prev.thu === item.thu &&
-          ((prev.tiet <= item.tiet && prev.tiet + prev.so_tiet > item.tiet) ||
-            (item.tiet <= prev.tiet && item.tiet + item.so_tiet > prev.tiet))
-        )
-      })
-      if (!isConflictWithPrevious) {
-        result.push(item)
+    if (!scheduleData) return [];
+    const subjects = scheduleData.data;
+    const usedSlots = new Set<string>();
+    const result: ScheduleItem[] = [];
+    // Gom tiết không trùng của từng môn thành các đoạn liên tiếp
+    subjects.forEach((item) => {
+      const availablePeriods: number[] = [];
+      for (let t = item.tiet; t < item.tiet + item.so_tiet; t++) {
+        const slotKey = `${item.thu}-${t}`;
+        if (!usedSlots.has(slotKey)) {
+          availablePeriods.push(t);
+          usedSlots.add(slotKey);
+        }
       }
-      // Nếu bị trùng với môn trước đó thì không push vào result
-    })
-    return result
+      // Gom các tiết liên tiếp thành khối
+      if (availablePeriods.length > 0) {
+        let start = availablePeriods[0];
+        let len = 1;
+        for (let i = 1; i < availablePeriods.length; i++) {
+          if (availablePeriods[i] === availablePeriods[i - 1] + 1) {
+            len++;
+          } else {
+            // Kết thúc một đoạn liên tiếp
+            result.push({ ...item, tiet: start, so_tiet: len });
+            start = availablePeriods[i];
+            len = 1;
+          }
+        }
+        // Thêm đoạn cuối cùng
+        result.push({ ...item, tiet: start, so_tiet: len });
+      }
+    });
+    return result;
   }
 
   // Hàm lấy danh sách các môn bị trùng tiết
