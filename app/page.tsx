@@ -49,6 +49,16 @@ interface GroupedScheduleData {
 }
 
 export default function SchedulePage() {
+  // Hàm di chuyển vị trí môn học trong danh sách
+  const moveSubject = (index: number, direction: number) => {
+    if (!scheduleData) return;
+    const newData = [...scheduleData.data];
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= newData.length) return;
+    // Hoán đổi vị trí
+    [newData[index], newData[targetIndex]] = [newData[targetIndex], newData[index]];
+    setScheduleData({ ...scheduleData, data: newData });
+  };
   const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null)
 
   // Khôi phục dữ liệu từ localStorage khi trang tải lại
@@ -1394,6 +1404,30 @@ export default function SchedulePage() {
                               onClick={() => handleDeleteSubject(item)}
                             >
                               Xóa
+                            </Button>
+                            {/* Nút di chuyển lên */}
+                            <Button
+                              size="default"
+                              variant="outline"
+                              className="h-10 px-2 text-base bg-gray-200 text-gray-700 hover:bg-gray-300"
+                              style={{ width: "32px", fontSize: "12px" }}
+                              disabled={index === 0}
+                              onClick={() => moveSubject(index, -1)}
+                              title="Di chuyển lên"
+                            >
+                              ↑
+                            </Button>
+                            {/* Nút di chuyển xuống */}
+                            <Button
+                              size="default"
+                              variant="outline"
+                              className="h-10 px-2 text-base bg-gray-200 text-gray-700 hover:bg-gray-300"
+                              style={{ width: "32px", fontSize: "12px" }}
+                              disabled={index === scheduleData.data.length - 1}
+                              onClick={() => moveSubject(index, 1)}
+                              title="Di chuyển xuống"
+                            >
+                              ↓
                             </Button>
                           </div>
                         </td>
