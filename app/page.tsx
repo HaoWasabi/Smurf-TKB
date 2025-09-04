@@ -19,6 +19,7 @@ interface ScheduleItem {
   tiet: number
   giang_vien: string
   phong: string
+  so_tc?: number // số tín chỉ, không bắt buộc
 }
 
 interface ScheduleData {
@@ -31,6 +32,7 @@ interface GroupedScheduleItem {
   ten: string
   mhp: string
   nhom: string
+  so_tc?: number // số tín chỉ, không bắt buộc
   lich: {
     thu: number
     tiet: number
@@ -77,7 +79,17 @@ export default function SchedulePage() {
   const [isDragOver, setIsDragOver] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false)
-  const [newSubject, setNewSubject] = useState({
+  const [newSubject, setNewSubject] = useState<{
+    ten: string
+    mhp: string
+    nhom: string
+    thu: number
+    tiet: number
+    so_tiet: number
+    giang_vien: string
+    phong: string
+    so_tc?: number
+  }>({
     ten: "",
     mhp: "",
     nhom: "",
@@ -86,6 +98,7 @@ export default function SchedulePage() {
     so_tiet: 1,
     giang_vien: "",
     phong: "",
+    so_tc: undefined,
   })
   const [editingSubject, setEditingSubject] = useState<ScheduleItem | null>(null)
   const [isEditSubjectOpen, setIsEditSubjectOpen] = useState(false)
@@ -134,6 +147,7 @@ export default function SchedulePage() {
         typeof item.tiet === "number" &&
         typeof item.giang_vien === "string" &&
         typeof item.phong === "string" &&
+        (item.so_tc === undefined || typeof item.so_tc === "number") &&
         item.thu >= 0 &&
         item.thu <= 7 &&
         item.tiet >= 1 &&
@@ -160,6 +174,7 @@ export default function SchedulePage() {
           ten: item.ten,
           mhp: item.mhp,
           nhom: item.nhom,
+          so_tc: item.so_tc,
           lich: [],
         })
       }
@@ -209,6 +224,8 @@ export default function SchedulePage() {
           tiet: schedule.tiet,
           giang_vien: schedule.giang_vien,
           phong: schedule.phong,
+          // Nếu course.so_tc không tồn tại thì bỏ qua trường này
+          ...(course.so_tc !== undefined ? { so_tc: course.so_tc } : {}),
         })
       })
     })
@@ -373,55 +390,6 @@ export default function SchedulePage() {
       setError(null)
     } catch (error) {
       setError(`Lỗi tạo preview: ${error instanceof Error ? error.message : "Lỗi không xác định"}`)
-    }
-  }
-
-  const handleExportFlat = () => {
-    if (!scheduleData) {
-      setError("Chưa có dữ liệu để xuất")
-      return
-    }
-
-    try {
-      setPreviewData(scheduleData)
-      setExportType("flat")
-      setShowJsonPreview(true)
-      setError(null)
-    } catch (error) {
-      setError(`Lỗi tạo preview: ${error instanceof Error ? error.message : "Lỗi không xác định"}`)
-    }
-  }
-
-  const handleExportCSV = () => {
-    if (!scheduleData) {
-      setError("Chưa có dữ liệu để xuất")
-      return
-    }
-
-    try {
-      const headers = ["Tên môn học", "Mã học phần", "Nhóm", "Thứ", "Tiết", "Số tiết", "Giảng viên", "Phòng"]
-      const csvContent = [
-        headers.join(","),
-        ...scheduleData.data.map((item) =>
-          [
-            `"${item.ten}"`,
-            item.mhp,
-            item.nhom,
-            item.thu === 0 ? "CN" : `Thứ ${item.thu}`,
-            item.tiet,
-            item.so_tiet,
-            `"${item.giang_vien}"`,
-            item.phong,
-          ].join(","),
-        ),
-      ].join("\n")
-
-      setPreviewData(csvContent)
-      setExportType("csv")
-      setShowJsonPreview(true)
-      setError(null)
-    } catch (error) {
-      setError(`Lỗi tạo CSV preview: ${error instanceof Error ? error.message : "Lỗi không xác định"}`)
     }
   }
 
@@ -833,6 +801,7 @@ export default function SchedulePage() {
       so_tiet: newSubject.so_tiet || 0,
       giang_vien: newSubject.giang_vien || "",
       phong: newSubject.phong || "",
+      so_tc: newSubject.so_tc,
     }
 
     if (scheduleData) {
@@ -857,6 +826,7 @@ export default function SchedulePage() {
       so_tiet: 1,
       giang_vien: "",
       phong: "",
+      so_tc: undefined,
     })
     setIsAddSubjectOpen(false)
     setError(null)
@@ -873,6 +843,7 @@ export default function SchedulePage() {
       so_tiet: subject.so_tiet,
       giang_vien: subject.giang_vien,
       phong: subject.phong,
+      so_tc: subject.so_tc ?? undefined,
     })
     setIsEditSubjectOpen(true)
   }
@@ -897,6 +868,7 @@ export default function SchedulePage() {
             so_tiet: newSubject.so_tiet || 0,
             giang_vien: newSubject.giang_vien || "",
             phong: newSubject.phong || "",
+            so_tc: newSubject.so_tc,
           }
         : item,
     )
@@ -917,6 +889,7 @@ export default function SchedulePage() {
       so_tiet: 1,
       giang_vien: "",
       phong: "",
+      so_tc: undefined,
     })
     setError(null)
   }
@@ -1204,6 +1177,17 @@ export default function SchedulePage() {
                           placeholder="Ví dụ: TC-201"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="so_tc">Số tín chỉ</Label>
+                        <Input
+                          id="so_tc"
+                          type="number"
+                          min={0}
+                          value={newSubject.so_tc === undefined ? "" : newSubject.so_tc}
+                          onChange={(e) => setNewSubject({ ...newSubject, so_tc: e.target.value === "" ? undefined : Number(e.target.value) })}
+                          placeholder="Ví dụ: 3"
+                        />
+                      </div>
                       <div className="flex gap-2 pt-4">
                         <Button onClick={handleAddSubject} className="flex-1">
                           Thêm môn học
@@ -1317,6 +1301,7 @@ export default function SchedulePage() {
                       <th className="border border-gray-300 px-2 py-1 text-xs">Số tiết</th>
                       <th className="border border-gray-300 px-2 py-1 text-xs">Giảng viên</th>
                       <th className="border border-gray-300 px-2 py-1 text-xs">Phòng</th>
+                      <th className="border border-gray-300 px-2 py-1 text-xs">Số tín chỉ</th>
                       <th className="border border-gray-300 px-2 py-1 text-xs">Thao tác</th>
                     </tr>
                   </thead>
@@ -1334,6 +1319,7 @@ export default function SchedulePage() {
                         <td className="border border-gray-300 px-2 py-1 text-xs text-center">{item.so_tiet || "-"}</td>
                         <td className="border border-gray-300 px-2 py-1 text-xs">{item.giang_vien || "-"}</td>
                         <td className="border border-gray-300 px-2 py-1 text-xs text-center">{item.phong || "-"}</td>
+                        <td className="border border-gray-300 px-2 py-1 text-xs text-center">{item.so_tc ?? "-"}</td>
                         <td className="border border-gray-300 px-2 py-1 text-xs">
                           <div className="flex gap-1">
                             <Button
@@ -1570,6 +1556,17 @@ export default function SchedulePage() {
                   value={newSubject.phong}
                   onChange={(e) => setNewSubject({ ...newSubject, phong: e.target.value })}
                   placeholder="Ví dụ: TC-201"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-so_tc">Số tín chỉ</Label>
+                <Input
+                  id="edit-so_tc"
+                  type="number"
+                  min={0}
+                  value={newSubject.so_tc === undefined ? "" : newSubject.so_tc}
+                  onChange={(e) => setNewSubject({ ...newSubject, so_tc: e.target.value === "" ? undefined : Number(e.target.value) })}
+                  placeholder="Ví dụ: 3"
                 />
               </div>
               <div className="flex gap-2 pt-4">
