@@ -1346,6 +1346,12 @@ export default function SchedulePage() {
                     ))}
                   </tbody>
                 </table>
+                {/* Tổng số tín chỉ đăng ký */}
+                <div className="mt-2 text-left text-sm text-blue-700 font-semibold">
+                  Tổng số tín chỉ đăng ký: {
+                    scheduleData.data.reduce((sum, item) => sum + (item.so_tc || 0), 0)
+                  }
+                </div>
               </div>
             </CardContent>
           </Card>
