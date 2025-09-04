@@ -517,9 +517,10 @@ export default function SchedulePage() {
         ctx.strokeRect(startX, y, cellWidth, cellHeight);
         ctx.fillStyle = "#f9fafb";
         ctx.fillRect(startX + 1, y + 1, cellWidth - 2, cellHeight - 2);
-        ctx.fillStyle = "#374151";
-        ctx.textAlign = "center";
-        ctx.fillText(`TIẾT ${period}`, startX + cellWidth / 2, y + cellHeight / 2 + 5);
+    ctx.fillStyle = "#374151";
+    ctx.textAlign = "center";
+    ctx.font = "bold 14px Arial";
+    ctx.fillText(`TIẾT ${period}`.toUpperCase(), startX + cellWidth / 2, y + cellHeight / 2 + 5);
 
         for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
           const x = startX + (dayIndex + 1) * cellWidth;
