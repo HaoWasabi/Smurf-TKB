@@ -551,15 +551,31 @@ export default function SchedulePage() {
             ctx.fillStyle = "#374151";
             ctx.font = "12px Arial";
             ctx.textAlign = "center";
-            const lines = [
-              subject.ten.substring(0, 15) + (subject.ten.length > 15 ? "..." : ""),
-              `${subject.giang_vien || ""}`,
-              `${subject.phong || ""}`,
-            ];
-            lines.forEach((line, lineIndex) => {
-              if (line.trim()) {
-                ctx.fillText(line, x + cellWidth / 2, y + 20 + lineIndex * 15);
+            // Tạo các dòng thông tin theo yêu cầu
+            let infoLines = [];
+            // Tên môn luôn hiện in đậm
+            infoLines.push(`${subject.ten}`);
+            // Mã HP và nhóm
+            infoLines.push(`Mã HP: ${subject.mhp}`);
+            if (subject.nhom && subject.nhom.trim()) {
+              infoLines.push(`Nhóm: ${subject.nhom}`);
+            }
+            // Giảng viên
+            if (subject.giang_vien && subject.giang_vien.trim()) {
+              infoLines.push(`GV: ${subject.giang_vien}`);
+            }
+            // Phòng
+            if (subject.phong && subject.phong.trim()) {
+              infoLines.push(`Phòng: ${subject.phong}`);
+            }
+            // Vẽ các dòng, tên môn in đậm
+            infoLines.forEach((line, lineIndex) => {
+              if (lineIndex === 0) {
+                ctx.font = "bold 12px Arial";
+              } else {
+                ctx.font = "12px Arial";
               }
+              ctx.fillText(line, x + cellWidth / 2, y + 20 + lineIndex * 15);
             });
           } else {
             // Nếu không có môn học, vẽ ô trống như bình thường
@@ -1443,12 +1459,26 @@ export default function SchedulePage() {
                                   borderColor: getCourseColor(cellInfo.item.mhp).border,
                                 }}
                               >
+                                {/* Tên môn luôn in đậm */}
                                 <div className="font-bold text-center mb-1 leading-tight">{cellInfo.item.ten}</div>
-                                <div className="text-center opacity-90 text-xs">
-                                  {cellInfo.item.mhp} - {cellInfo.item.nhom}
-                                </div>
-                                <div className="text-center mt-1 font-medium">{cellInfo.item.giang_vien}</div>
-                                <div className="text-center font-medium">{cellInfo.item.phong}</div>
+                                {/* Mã HP và nhóm nếu có */}
+                                {cellInfo.item.mhp && (
+                                  <div className="text-center opacity-90 text-xs">
+                                    Mã HP: {cellInfo.item.mhp}
+                                    {cellInfo.item.nhom && cellInfo.item.nhom.trim() && (
+                                      <div className="text-center mt-1">Nhóm: {cellInfo.item.nhom}</div>
+                                    )}
+                                  </div>
+                                )}
+                                {/* Giảng viên nếu có */}
+                                {cellInfo.item.giang_vien && cellInfo.item.giang_vien.trim() && (
+                                  <div className="text-center mt-1">GV: {cellInfo.item.giang_vien}</div>
+                                )}
+                                {/* Phòng nếu có */}
+                                {cellInfo.item.phong && cellInfo.item.phong.trim() && (
+                                  <div className="text-center mt-1">Phòng: {cellInfo.item.phong}</div>
+                                )}
+                                {/* Số tiết nếu >1 */}
                                 {cellInfo.item.so_tiet > 1 && (
                                   <div className="text-center text-xs opacity-75 mt-1">
                                     ({cellInfo.item.so_tiet} tiết)
