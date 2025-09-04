@@ -509,6 +509,8 @@ export default function SchedulePage() {
       })
       // Sử dụng các khối đã tách tiết không trùng và đã gộp tiết liền nhau
       const nonConflicted = getNonConflictedSubjects();
+      // Vẽ các khối môn học liền mạch, không bị chia ô bởi đường viền tiết bên trong khối môn
+      const drawnCells = new Set<string>();
       for (let period = 1; period <= 10; period++) {
         const y = startY + period * cellHeight;
         // Vẽ cột đầu tiên số tiết
@@ -519,25 +521,32 @@ export default function SchedulePage() {
         ctx.textAlign = "center";
         ctx.fillText(`TIẾT ${period}`, startX + cellWidth / 2, y + cellHeight / 2 + 5);
 
-        // Vẽ các cột ngày
         for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
           const x = startX + (dayIndex + 1) * cellWidth;
-          ctx.strokeRect(x, y, cellWidth, cellHeight);
-          // dayIndex 0-5: thứ 2-7, dayIndex 6: CN
           const thuValue = dayIndex < 6 ? dayIndex + 2 : 0;
+          // Kiểm tra xem đã vẽ khối môn ở vị trí này chưa
+          const cellKey = `${thuValue}-${period}`;
+          if (drawnCells.has(cellKey)) continue;
           // Tìm khối môn bắt đầu tại tiết này
           const subject = nonConflicted.find(
             (s) => s.thu === thuValue && s.tiet === period
           );
           if (subject) {
+            // Đánh dấu các tiết đã vẽ khối môn này
+            for (let t = subject.tiet; t < subject.tiet + subject.so_tiet; t++) {
+              drawnCells.add(`${thuValue}-${t}`);
+            }
             const colors = ["#dbeafe", "#dcfce7", "#fef3c7", "#fce7f3", "#e0e7ff", "#f0fdf4"];
-            // Tìm index dựa trên vị trí trong scheduleData.data để giữ màu sắc cũ
             const originalIdx = scheduleData.data.findIndex(
               (item) => item.mhp === subject.mhp && item.nhom === subject.nhom && item.thu === subject.thu && item.tiet <= subject.tiet && item.tiet + item.so_tiet - 1 >= subject.tiet
             );
             const colorIndex = originalIdx % colors.length;
             ctx.fillStyle = colors[colorIndex];
             ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight * subject.so_tiet - 2);
+            // Vẽ viền ngoài khối môn
+            ctx.strokeStyle = "#d1d5db";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, cellWidth, cellHeight * subject.so_tiet);
             ctx.fillStyle = "#374151";
             ctx.font = "12px Arial";
             ctx.textAlign = "center";
@@ -551,6 +560,11 @@ export default function SchedulePage() {
                 ctx.fillText(line, x + cellWidth / 2, y + 20 + lineIndex * 15);
               }
             });
+          } else {
+            // Nếu không có môn học, vẽ ô trống như bình thường
+            ctx.strokeRect(x, y, cellWidth, cellHeight);
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2);
           }
         }
       }
