@@ -1116,11 +1116,12 @@ export default function SchedulePage() {
                           placeholder="Ví dụ: Lập trình Web"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="mhp">Mã học phần *</Label>
-                        <Input
-                          id="mhp"
-                          value={newSubject.mhp}
+                      <div className="flex gap-2">
+                        <div style={{ width: "50%" }}>
+                          <Label htmlFor="mhp">Mã học phần *</Label>
+                          <Input
+                            id="mhp"
+                            value={newSubject.mhp}
                           onChange={(e) => setNewSubject({ ...newSubject, mhp: e.target.value })}
                           placeholder="Ví dụ: IT4409"
                         />
@@ -1134,8 +1135,9 @@ export default function SchedulePage() {
                           placeholder="Ví dụ: 01"
                         />
                       </div>
+                      </div>
                       <div className="text-sm text-gray-600 mb-2">Thông tin thời gian (tùy chọn):</div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-3">
                         <div>
                           <Label htmlFor="thu">Thứ</Label>
                           <Select
@@ -1174,24 +1176,24 @@ export default function SchedulePage() {
                             </SelectContent>
                           </Select>
                         </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="so_tiet">Số tiết</Label>
-                        <Select
-                          value={newSubject.so_tiet.toString()}
-                          onValueChange={(value) => setNewSubject({ ...newSubject, so_tiet: Number.parseInt(value) })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1 tiết</SelectItem>
-                            <SelectItem value="2">2 tiết</SelectItem>
-                            <SelectItem value="3">3 tiết</SelectItem>
-                            <SelectItem value="4">4 tiết</SelectItem>
-                            <SelectItem value="5">5 tiết</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div>
+                          <Label htmlFor="so_tiet">Số tiết</Label>
+                          <Select
+                            value={newSubject.so_tiet.toString()}
+                            onValueChange={(value) => setNewSubject({ ...newSubject, so_tiet: Number.parseInt(value) })}
+                            >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1 tiết</SelectItem>
+                              <SelectItem value="2">2 tiết</SelectItem>
+                              <SelectItem value="3">3 tiết</SelectItem>
+                              <SelectItem value="4">4 tiết</SelectItem>
+                              <SelectItem value="5">5 tiết</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div>
                         <Label htmlFor="giang_vien">Giảng viên</Label>
@@ -1202,25 +1204,27 @@ export default function SchedulePage() {
                           placeholder="Ví dụ: TS. Nguyễn Văn A"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="phong">Phòng học</Label>
-                        <Input
-                          id="phong"
-                          value={newSubject.phong}
-                          onChange={(e) => setNewSubject({ ...newSubject, phong: e.target.value })}
-                          placeholder="Ví dụ: TC-201"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="so_tc">Số tín chỉ</Label>
-                        <Input
-                          id="so_tc"
-                          type="number"
-                          min={0}
-                          value={newSubject.so_tc === undefined ? "" : newSubject.so_tc}
-                          onChange={(e) => setNewSubject({ ...newSubject, so_tc: e.target.value === "" ? undefined : Number(e.target.value) })}
-                          placeholder="Ví dụ: 3"
-                        />
+                      <div className="flex gap-2">
+                        <div style={{ width: "50%" }}>
+                          <Label htmlFor="phong">Phòng học</Label>
+                          <Input
+                            id="phong"
+                            value={newSubject.phong}
+                            onChange={(e) => setNewSubject({ ...newSubject, phong: e.target.value })}
+                            placeholder="Ví dụ: TC-201"
+                          />
+                        </div>
+                        <div style={{ width: "50%" }}>
+                          <Label htmlFor="so_tc">Số tín chỉ</Label>
+                          <Input
+                            id="so_tc"
+                            type="number"
+                            min={0}
+                            value={newSubject.so_tc === undefined ? "" : newSubject.so_tc}
+                            onChange={(e) => setNewSubject({ ...newSubject, so_tc: e.target.value === "" ? undefined : Number(e.target.value) })}
+                            placeholder="Ví dụ: 3"
+                          />
+                        </div>
                       </div>
                       <div className="flex gap-2 pt-4">
                         <Button onClick={handleAddSubject} className="flex-1">
@@ -1503,7 +1507,8 @@ export default function SchedulePage() {
                   placeholder="Ví dụ: Lập trình Web"
                 />
               </div>
-              <div>
+              <div className="flex gap-2">
+              <div style={{ width: "50%" }}>
                 <Label htmlFor="edit-mhp">Mã học phần *</Label>
                 <Input
                   id="edit-mhp"
@@ -1512,7 +1517,7 @@ export default function SchedulePage() {
                   placeholder="Ví dụ: IT4409"
                 />
               </div>
-              <div>
+              <div style={{ width: "50%" }}>
                 <Label htmlFor="edit-nhom">Nhóm</Label>
                 <Input
                   id="edit-nhom"
@@ -1521,8 +1526,9 @@ export default function SchedulePage() {
                   placeholder="Ví dụ: 01"
                 />
               </div>
+              </div>
               <div className="text-sm text-gray-600 mb-2">Thông tin thời gian (tùy chọn):</div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label htmlFor="edit-thu">Thứ</Label>
                   <Select
@@ -1561,24 +1567,24 @@ export default function SchedulePage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="edit-so_tiet">Số tiết</Label>
-                <Select
-                  value={newSubject.so_tiet.toString()}
-                  onValueChange={(value) => setNewSubject({ ...newSubject, so_tiet: Number.parseInt(value) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 tiết</SelectItem>
-                    <SelectItem value="2">2 tiết</SelectItem>
-                    <SelectItem value="3">3 tiết</SelectItem>
-                    <SelectItem value="4">4 tiết</SelectItem>
-                    <SelectItem value="5">5 tiết</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <Label htmlFor="edit-so_tiet">Số tiết</Label>
+                  <Select
+                    value={newSubject.so_tiet.toString()}
+                    onValueChange={(value) => setNewSubject({ ...newSubject, so_tiet: Number.parseInt(value) })}
+                    >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 tiết</SelectItem>
+                      <SelectItem value="2">2 tiết</SelectItem>
+                      <SelectItem value="3">3 tiết</SelectItem>
+                      <SelectItem value="4">4 tiết</SelectItem>
+                      <SelectItem value="5">5 tiết</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div>
                 <Label htmlFor="edit-giang_vien">Giảng viên</Label>
@@ -1589,7 +1595,8 @@ export default function SchedulePage() {
                   placeholder="Ví dụ: TS. Nguyễn Văn A"
                 />
               </div>
-              <div>
+              <div className="flex gap-2">
+              <div style={{ width: "50%" }}>
                 <Label htmlFor="edit-phong">Phòng học</Label>
                 <Input
                   id="edit-phong"
@@ -1598,7 +1605,7 @@ export default function SchedulePage() {
                   placeholder="Ví dụ: TC-201"
                 />
               </div>
-              <div>
+              <div style={{ width: "50%" }}>
                 <Label htmlFor="edit-so_tc">Số tín chỉ</Label>
                 <Input
                   id="edit-so_tc"
@@ -1608,6 +1615,7 @@ export default function SchedulePage() {
                   onChange={(e) => setNewSubject({ ...newSubject, so_tc: e.target.value === "" ? undefined : Number(e.target.value) })}
                   placeholder="Ví dụ: 3"
                 />
+              </div>
               </div>
               <div className="flex gap-2 pt-4">
                 <Button onClick={handleSaveEditedSubject} className="flex-1">
